@@ -34,50 +34,26 @@
 
         /* --- TYPOGRAPHY / LAYOUT FIXES --- */
         .prose { font-size: 0.935rem; max-width: none; }
-        
-        /* Paragraphs */
         .prose p { margin-bottom: 1.25em; line-height: 1.75; color: #d4d4d8; letter-spacing: 0.01em; }
         .prose p:last-child { margin-bottom: 0; }
-        
-        /* Headings */
         .prose h1, .prose h2, .prose h3 { color: #f4f4f5; font-weight: 700; margin-top: 1.75em; margin-bottom: 0.75em; line-height: 1.3; }
         .prose h1 { font-size: 1.5em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3em; }
         .prose h2 { font-size: 1.25em; }
         .prose h3 { font-size: 1.1em; color: #e4e4e7; }
-        
-        /* Lists */
         .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.25em; color: #d4d4d8; }
         .prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1.25em; color: #d4d4d8; }
         .prose li { margin-bottom: 0.5em; padding-left: 0.25em; }
-        .prose li::marker { color: #60a5fa; } /* Blue markers */
-
-        /* Inline Elements */
+        .prose li::marker { color: #60a5fa; } 
         .prose strong { color: #fff; font-weight: 600; }
         .prose a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96, 165, 250, 0.3); transition: all 0.2s; }
         .prose a:hover { border-bottom-color: #60a5fa; color: #93c5fd; }
-        
-        /* Blockquotes (Regulasi/Pasal) */
-        .prose blockquote { 
-            border-left: 4px solid #3b82f6; 
-            padding: 0.75rem 1rem; 
-            margin: 1.5rem 0; 
-            background: rgba(59, 130, 246, 0.05); 
-            border-radius: 0 0.5rem 0.5rem 0;
-            color: #a1a1aa; 
-            font-style: italic; 
-        }
-
-        /* Tables */
+        .prose blockquote { border-left: 4px solid #3b82f6; padding: 0.75rem 1rem; margin: 1.5rem 0; background: rgba(59, 130, 246, 0.05); border-radius: 0 0.5rem 0.5rem 0; color: #a1a1aa; font-style: italic; }
         .prose table { width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.9em; }
         .prose th { border-bottom: 1px solid #3f3f46; padding: 0.75rem; color: #fff; font-weight: 600; background: rgba(255,255,255,0.03); }
         .prose td { border-bottom: 1px solid #27272a; padding: 0.75rem; color: #d4d4d8; }
-        
-        /* Code Blocks */
         .prose pre { background: #000; padding: 1rem; border-radius: 0.5rem; border: 1px solid #27272a; overflow-x: auto; margin-bottom: 1.5rem; }
         .prose code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: #f472b6; background: rgba(255,255,255,0.05); padding: 0.2em 0.4em; border-radius: 0.25em; }
         .prose pre code { background: transparent; padding: 0; color: inherit; }
-
-        /* User Bubble Overrides */
         .user-content .prose p { color: #fff; margin-bottom: 0.5em; }
         .user-content .prose a { color: #fff; border-bottom-color: rgba(255,255,255,0.5); }
     </style>
@@ -95,12 +71,13 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
-            apiKey: "ISI_API_KEY_FIREBASE_ANDA_DISINI",
-            authDomain: "project-id.firebaseapp.com",
-            projectId: "project-id",
-            storageBucket: "project-id.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
+            apiKey: "AIzaSyCRSxm9fVf0rjOCdVfzGyPoYjK9_wtUr8I",
+            authDomain: "metrologi-ai.firebaseapp.com",
+            projectId: "metrologi-ai",
+            storageBucket: "metrologi-ai.firebasestorage.app",
+            messagingSenderId: "410304688412",
+            appId: "1:410304688412:web:308e7238e0ac27ddff4ad9",
+            measurementId: "G-51DBTK798E"
         };
 
         window.authService = { isConfigured: false, auth: null, login: async () => console.error("Firebase not configured"), logout: async () => {}, init: (cb) => cb(null) };
@@ -124,7 +101,9 @@
     <!-- REACT APP -->
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        const API_KEY = "AIzaSyCHQbkmex1buEVSLGJHMFeSDuH6BQTCE8w"; 
+        
+        // --- API KEY UPDATE ---
+        const API_KEY = "AIzaSyDaRkwLy7aHMChQZdR5E4qD-3KQkBETTe4"; 
         const MODEL = "gemini-2.5-flash-preview-09-2025";
         
         const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -308,7 +287,7 @@
                                     {msg.role === 'ai' && <div className="w-9 h-9 rounded-xl bg-[#1c1c1f] border border-white/10 flex items-center justify-center flex-shrink-0 mt-1"><i className="fa-solid fa-robot text-blue-400 text-sm"></i></div>}
                                     <div className={`flex flex-col gap-2 max-w-[85%] md:max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                                         <div className="flex items-center gap-2 px-1"><span className="text-[10px] text-gray-500 font-mono opacity-70 uppercase tracking-wider">{msg.role === 'user' ? 'Anda' : 'Assistant'} • {msg.timestamp}</span></div>
-                                        {msg.attachments && msg.attachments.length > 0 && <div className="flex flex-wrap gap-2 justify-end">{msg.attachments.map((att, i) => (<div key={i} className="bg-[#1c1c1f] border border-white/10 rounded-lg p-2 flex items-center gap-3 pr-4 max-w-full">{att.type === 'image' && att.preview ? <img src={att.preview} className="h-10 w-10 rounded object-cover" /> : <div className={`h-10 w-10 flex items-center justify-center rounded ${att.type==='pdf' ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-gray-400'}`}><i className={`fa-solid ${att.type==='pdf' ? 'fa-file-pdf' : 'fa-file'}`}></i></div>}<span className="text-xs text-gray-300 truncate max-w-[150px] font-medium">{att.name}</span></div>))}</div>}
+                                        {msg.attachments && msg.attachments.length > 0 && <div className="flex flex-wrap gap-2 justify-end">{msg.attachments.map((att, i) => (<div key={i} className="bg-[#1c1c1f] border border-white/10 rounded-lg p-2 flex items-center gap-3 pr-4 max-w-full">{att.type === 'image' && att.preview ? <img src={att.preview} className="h-10 w-10 rounded object-cover" /> : <div className={`h-10 w-10 flex items-center justify-center rounded-md ${att.type==='pdf' ? 'bg-red-500/10 text-red-400' : 'bg-white/10 text-gray-400'}`}><i className={`fa-solid ${att.type==='pdf' ? 'fa-file-pdf text-xl' : 'fa-file text-xl'}`}></i></div>}<span className="text-xs text-gray-300 truncate max-w-[150px] font-medium">{att.name}</span></div>))}</div>}
                                         <div className={`p-5 rounded-2xl text-[0.935rem] shadow-sm border ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none border-blue-500 text-left user-content' : 'bg-[#18181b] text-gray-200 rounded-tl-none border-white/5'}`}>
                                             <div className="prose prose-invert" dangerouslySetInnerHTML={renderMarkdown(msg.text)}></div>
                                             {msg.sources && msg.sources.length > 0 && <div className="mt-4 pt-4 border-t border-white/10"><p className="text-[10px] font-bold text-gray-500 uppercase mb-2">Sumber Referensi:</p><div className="flex flex-wrap gap-2">{msg.sources.map((src, i) => (<a key={i} href={src.uri} target="_blank" className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/20 hover:bg-black/40 rounded-md border border-white/10 text-[11px] text-blue-300 transition-colors no-underline"><i className="fa-solid fa-link text-[9px]"></i> {src.title}</a>))}</div></div>}
@@ -346,8 +325,6 @@
     </script>
 </body>
 </html>
-
-
 
 
 
