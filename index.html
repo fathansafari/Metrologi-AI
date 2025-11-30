@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MetrologyPro AI - Enterprise Vision</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Metrologi Pro - 1.0 Version</title>
     
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,163 +13,306 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
+    <!-- AlaSQL untuk Database SQL Client-Side -->
+    <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.3/dist/alasql.min.js"></script>
+
+    <!-- MathJax untuk Rendering Matematika/LaTeX -->
+    <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 
     <style>
         :root { --bg-dark: #09090b; --bg-sidebar: #0f0f11; --accent: #3b82f6; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #e4e4e7; overflow: hidden; height: 100dvh; width: 100vw; }
+        
+        /* Reset & Base Layout */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--bg-dark); 
+            color: #e4e4e7; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100dvh; 
+            width: 100vw; 
+            overflow: hidden; 
+        }
+        
+        #root { height: 100%; width: 100%; }
+
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+        /* Scrollbar Styling */
+        .scroller { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
         .scroller::-webkit-scrollbar { width: 4px; }
         .scroller::-webkit-scrollbar-track { background: transparent; }
         .scroller::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+
+        /* UI Components */
         .glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .glass-popover { background: rgba(30, 30, 35, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        .modal-backdrop { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); }
+        
+        /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .msg-enter { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes pulse-dot { 0%, 100% { opacity: 0.4; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
         .typing-dot { animation: pulse-dot 1.2s infinite ease-in-out; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; } .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        /* --- TYPOGRAPHY / LAYOUT FIXES --- */
-        .prose { font-size: 0.935rem; max-width: none; }
-        .prose p { margin-bottom: 1.25em; line-height: 1.75; color: #d4d4d8; letter-spacing: 0.01em; }
-        .prose p:last-child { margin-bottom: 0; }
-        .prose h1, .prose h2, .prose h3 { color: #f4f4f5; font-weight: 700; margin-top: 1.75em; margin-bottom: 0.75em; line-height: 1.3; }
-        .prose h1 { font-size: 1.5em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3em; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        /* --- IMPROVED PROSE / MARKDOWN STYLING --- */
+        .prose { 
+            font-size: 0.95rem; 
+            max-width: none; 
+            line-height: 1.75; 
+            color: #e4e4e7;
+        }
+        
+        /* Headings */
+        .prose h1, .prose h2, .prose h3, .prose h4 { 
+            color: #fff; 
+            font-weight: 700; 
+            margin-top: 1.5em; 
+            margin-bottom: 0.75em; 
+            line-height: 1.3;
+        }
+        .prose h1 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .prose h2 { font-size: 1.25em; }
-        .prose h3 { font-size: 1.1em; color: #e4e4e7; }
-        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.25em; color: #d4d4d8; }
-        .prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1.25em; color: #d4d4d8; }
+
+        /* Paragraphs & Lists */
+        .prose p { margin-bottom: 1.25em; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.25em; }
+        .prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1.25em; }
         .prose li { margin-bottom: 0.5em; padding-left: 0.25em; }
-        .prose li::marker { color: #60a5fa; } 
-        .prose strong { color: #fff; font-weight: 600; }
-        .prose a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96, 165, 250, 0.3); transition: all 0.2s; }
-        .prose a:hover { border-bottom-color: #60a5fa; color: #93c5fd; }
-        .prose blockquote { border-left: 4px solid #3b82f6; padding: 0.75rem 1rem; margin: 1.5rem 0; background: rgba(59, 130, 246, 0.05); border-radius: 0 0.5rem 0.5rem 0; color: #a1a1aa; font-style: italic; }
-        .prose table { width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.9em; }
-        .prose th { border-bottom: 1px solid #3f3f46; padding: 0.75rem; color: #fff; font-weight: 600; background: rgba(255,255,255,0.03); }
-        .prose td { border-bottom: 1px solid #27272a; padding: 0.75rem; color: #d4d4d8; }
-        .prose pre { background: #000; padding: 1rem; border-radius: 0.5rem; border: 1px solid #27272a; overflow-x: auto; margin-bottom: 1.5rem; }
-        .prose code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: #f472b6; background: rgba(255,255,255,0.05); padding: 0.2em 0.4em; border-radius: 0.25em; }
-        .prose pre code { background: transparent; padding: 0; color: inherit; }
-        .user-content .prose p { color: #fff; margin-bottom: 0.5em; }
+        .prose li::marker { color: #60a5fa; }
+
+        /* Inline Elements */
+        .prose strong { color: #fff; font-weight: 700; }
+        .prose a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96, 165, 250, 0.3); transition: border 0.2s; }
+        .prose a:hover { border-bottom-color: #60a5fa; }
+
+        /* MathJax Override for Colors */
+        mjx-container { color: #e4e4e7 !important; }
+        .user-content mjx-container { color: #fff !important; }
+
+        /* Code Blocks */
+        .prose code { 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 0.85em; 
+            color: #f472b6; 
+            background: rgba(255,255,255,0.08); 
+            padding: 0.2em 0.4em; 
+            border-radius: 0.25em; 
+        }
+        .prose pre { 
+            background: #121214; 
+            padding: 1rem; 
+            border-radius: 0.75rem; 
+            overflow-x: auto; 
+            margin-bottom: 1.5rem; 
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .prose pre code { background: transparent; padding: 0; color: #e4e4e7; font-size: 0.85rem; }
+
+        /* User Content specific overrides */
+        .user-content .prose p, .user-content .prose li { color: #fff; }
         .user-content .prose a { color: #fff; border-bottom-color: rgba(255,255,255,0.5); }
     </style>
-    
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
 </head>
 <body>
-    <div id="root" class="h-full w-full"></div>
+    <div id="root"></div>
 
-    <!-- FIREBASE MODULE SETUP -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    
-
-        window.authService = { isConfigured: false, auth: null, login: async () => console.error("Firebase not configured"), logout: async () => {}, init: (cb) => cb(null) };
-
-        if (firebaseConfig.apiKey !== "AIzaSyD7nQn-RBaFFBUIszq5bj0nODicirwVoh4") {
-            try {
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                const provider = new GoogleAuthProvider();
-                window.authService = {
-                    isConfigured: true,
-                    auth: auth,
-                    login: async () => { const res = await signInWithPopup(auth, provider); return res.user; },
-                    logout: async () => await signOut(auth),
-                    init: (cb) => onAuthStateChanged(auth, cb)
-                };
-            } catch (e) { console.error("Firebase Init Error:", e); }
-        }
-    </script>
-
-    <!-- REACT APP -->
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
-        // --- API KEY UPDATE ---
-        const API_KEY = "AIzaSyBjbIiqrrdgZ9nZ-qWmwGBeEOSxIIqaTIs"; 
-        const MODEL = "gemini-2.5-flash-preview-09-2025";
-        
-        const generateId = () => Math.random().toString(36).substr(2, 9);
-        const getTime = () => new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-
-        const extractTextFromPDF = async (file) => {
+        // --- SQL DATABASE INIT ---
+        const initSQL = () => {
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                let fullText = "";
-                const maxPages = Math.min(pdf.numPages, 10);
-                for (let i = 1; i <= maxPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(" ");
-                    fullText += `[Halaman ${i}]: ${pageText}\n`;
-                }
-                return fullText;
-            } catch (error) { console.error("PDF Error:", error); return "Gagal membaca teks PDF."; }
+                alasql('CREATE localStorage DATABASE IF NOT EXISTS metrology_db');
+                alasql('ATTACH localStorage DATABASE metrology_db');
+                alasql('USE metrology_db');
+
+                alasql('CREATE TABLE IF NOT EXISTS users (id STRING PRIMARY KEY, username STRING, password STRING, created_at DATETIME)');
+                alasql('CREATE TABLE IF NOT EXISTS sessions (id STRING PRIMARY KEY, user_id STRING, title STRING, timestamp DATETIME)');
+                alasql('CREATE TABLE IF NOT EXISTS messages (id STRING PRIMARY KEY, session_id STRING, role STRING, text STRING, attachments STRING, timestamp STRING, sources STRING)');
+                
+                console.log("SQL Database Initialized");
+            } catch (e) {
+                console.error("SQL Init Error (Fallback Memory):", e);
+                alasql('CREATE DATABASE IF NOT EXISTS metrology_db');
+                alasql('USE metrology_db');
+                alasql('CREATE TABLE IF NOT EXISTS users (id STRING PRIMARY KEY, username STRING, password STRING, created_at DATETIME)');
+                alasql('CREATE TABLE IF NOT EXISTS sessions (id STRING PRIMARY KEY, user_id STRING, title STRING, timestamp DATETIME)');
+                alasql('CREATE TABLE IF NOT EXISTS messages (id STRING PRIMARY KEY, session_id STRING, role STRING, text STRING, attachments STRING, timestamp STRING, sources STRING)');
+            }
         };
 
-        const fileToBase64 = (file) => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
-        });
+        const db = {
+            register: (username, password) => {
+                const exists = alasql('SELECT * FROM users WHERE username = ?', [username]);
+                if (exists.length > 0) throw new Error("Username sudah terdaftar!");
+                const id = Math.random().toString(36).substr(2, 9);
+                alasql('INSERT INTO users VALUES (?, ?, ?, NOW())', [id, username, password]);
+                return { id, username };
+            },
+            login: (username, password) => {
+                const user = alasql('SELECT * FROM users WHERE username = ? AND password = ?', [username, password]);
+                if (user.length === 0) throw new Error("Username atau password salah!");
+                return user[0];
+            },
+            getSessions: (userId) => alasql('SELECT * FROM sessions WHERE user_id = ? ORDER BY timestamp DESC', [userId]),
+            createSession: (userId, title = 'Chat Baru') => {
+                const id = Math.random().toString(36).substr(2, 9);
+                alasql('INSERT INTO sessions VALUES (?, ?, ?, NOW())', [id, userId, title]);
+                return { id, title, timestamp: new Date(), messages: [] };
+            },
+            deleteSession: (sessionId) => {
+                alasql('DELETE FROM messages WHERE session_id = ?', [sessionId]);
+                alasql('DELETE FROM sessions WHERE id = ?', [sessionId]);
+            },
+            updateSessionTitle: (sessionId, title) => alasql('UPDATE sessions SET title = ? WHERE id = ?', [title, sessionId]),
+            getMessages: (sessionId) => {
+                const msgs = alasql('SELECT * FROM messages WHERE session_id = ? ORDER BY timestamp ASC', [sessionId]);
+                return msgs.map(m => ({ ...m, attachments: m.attachments ? JSON.parse(m.attachments) : [], sources: m.sources ? JSON.parse(m.sources) : [] }));
+            },
+            saveMessage: (sessionId, role, text, attachments = [], sources = []) => {
+                const id = Math.random().toString(36).substr(2, 9);
+                const time = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                alasql('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)', [id, sessionId, role, text, JSON.stringify(attachments), time, JSON.stringify(sources)]);
+                return { id, role, text, attachments, timestamp: time, sources };
+            }
+        };
+        initSQL();
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const API_KEY = "AIzaSyBjbIiqrrdgZ9nZ-qWmwGBeEOSxIIqaTIs";
+        const MODEL = "gemini-2.5-flash-preview-09-2025";
+
+        // --- COMPONENTS ---
+
+        const AuthModal = ({ isOpen, onLogin }) => {
+            const [isRegister, setIsRegister] = useState(false);
+            const [username, setUsername] = useState("");
+            const [password, setPassword] = useState("");
+            const [error, setError] = useState("");
+
+            if (!isOpen) return null;
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setError("");
+                try {
+                    if (!username || !password) throw new Error("Mohon isi username dan password.");
+                    let user = isRegister ? db.register(username, password) : db.login(username, password);
+                    onLogin(user);
+                } catch (err) { setError(err.message); }
+            };
+
+            return (
+                <div className="fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
+                    <div className="glass-popover w-full max-w-sm rounded-2xl p-6 animate-[fadeIn_0.3s_ease-out] border border-white/10">
+                        <div className="text-center mb-6">
+                            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20"><i className="fa-solid fa-cube text-white text-xl"></i></div>
+                            <h2 className="text-xl font-bold text-white">Metrologi Pro</h2>
+                            <p className="text-xs text-gray-400 mt-1">Sistem Database Terintegrasi</p>
+                        </div>
+                        {error && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg text-center">{error}</div>}
+                        <form onSubmit={handleSubmit} className="space-y-3">
+                            <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-[#1c1c1f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-gray-600" placeholder="Username" />
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#1c1c1f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-gray-600" placeholder="Password" />
+                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition-all shadow-lg mt-2">{isRegister ? 'Buat Akun' : 'Masuk'}</button>
+                        </form>
+                        <p className="mt-4 text-center text-xs text-gray-500 cursor-pointer hover:text-white transition-colors" onClick={() => { setIsRegister(!isRegister); setError(""); }}>{isRegister ? "Sudah punya akun? Login" : "Belum punya akun? Daftar"}</p>
+                    </div>
+                </div>
+            );
+        };
 
         const SidebarItem = ({ session, active, onClick, onDelete }) => (
             <div onClick={onClick} className={`group flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all border ${active ? 'bg-white/10 border-white/10 text-white' : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200'}`}>
                 <i className={`fa-regular fa-message text-xs ${active ? 'text-blue-400' : 'opacity-50'}`}></i>
-                <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium truncate">{session.title}</p>
-                    <p className="text-[10px] opacity-50 truncate">{session.timestamp.toLocaleDateString()}</p>
-                </div>
+                <div className="flex-1 overflow-hidden"><p className="text-sm font-medium truncate">{session.title}</p></div>
                 <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 transition-all"><i className="fa-solid fa-xmark text-xs"></i></button>
             </div>
         );
 
+        // --- MAIN APP ---
         const App = () => {
             const [user, setUser] = useState(null);
-            const [authLoading, setAuthLoading] = useState(true);
-            const [sessions, setSessions] = useState([{ id: 'init', title: 'Chat Baru', timestamp: new Date(), messages: [{ id: 'w1', role: 'ai', text: "Halo. Saya **MetrologyPro AI**.\n\nSaya siap membantu analisis teknis dan regulasi.", timestamp: getTime() }] }]);
-            const [activeId, setActiveId] = useState('init');
+            const [sessions, setSessions] = useState([]);
+            const [activeId, setActiveId] = useState(null);
+            const [messages, setMessages] = useState([]);
             const [input, setInput] = useState("");
             const [isLoading, setIsLoading] = useState(false);
             const [sidebarOpen, setSidebarOpen] = useState(false);
             const [menuOpen, setMenuOpen] = useState(false);
             const [attachments, setAttachments] = useState([]);
-
+            
             const bottomRef = useRef(null);
             const fileRef = useRef(null);
             const pdfRef = useRef(null);
 
-            const activeSession = sessions.find(s => s.id === activeId) || sessions[0];
-            const messages = activeSession.messages;
-
+            // Fetch Sessions
             useEffect(() => {
-                if (window.authService && window.authService.init) {
-                    window.authService.init((u) => { setUser(u); setAuthLoading(false); });
-                } else { setAuthLoading(false); }
-            }, []);
-            useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isLoading]);
+                if (user) {
+                    const userSessions = db.getSessions(user.id);
+                    if (userSessions.length === 0) createNewSession(true);
+                    else {
+                        setSessions(userSessions);
+                        setActiveId(userSessions[0].id);
+                    }
+                } else {
+                    setSessions([]); setMessages([]); setActiveId(null);
+                }
+            }, [user]);
 
-            const handleLogin = async () => { if (!window.authService.isConfigured) { alert("Konfigurasi Firebase belum diisi."); return; } try { await window.authService.login(); } catch (err) { alert("Login Error"); } };
-            const handleLogout = async () => { await window.authService.logout(); setUser(null); };
-            const createSession = () => {
-                const newId = generateId();
-                setSessions([{ id: newId, title: 'Chat Baru', timestamp: new Date(), messages: [] }, ...sessions]);
-                setActiveId(newId); setSidebarOpen(false);
+            // Fetch Messages
+            useEffect(() => {
+                if (activeId) {
+                    const msgs = db.getMessages(activeId);
+                    if (msgs.length === 0) setMessages([{ id: 'init', role: 'ai', text: "Halo. Saya **Metrologi Pro**.\n\nSaya siap membantu analisis teknis dan regulasi.", timestamp: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) }]);
+                    else setMessages(msgs);
+                }
+            }, [activeId]);
+
+            // Auto Scroll & Math Rendering
+            useEffect(() => {
+                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                // Trigger MathJax render for new messages
+                if (window.MathJax) {
+                    window.MathJax.typesetPromise && window.MathJax.typesetPromise();
+                }
+            }, [messages, isLoading]);
+
+            const createNewSession = (isAuto = false) => {
+                if (!user) return;
+                const newSession = db.createSession(user.id);
+                setSessions(prev => [newSession, ...prev]);
+                setActiveId(newSession.id);
+                if(!isAuto) setSidebarOpen(false);
             };
+
             const deleteSession = (id) => {
+                db.deleteSession(id);
                 const remain = sessions.filter(s => s.id !== id);
-                if(remain.length === 0) { setSessions([{ id: 'init', title: 'Chat Baru', timestamp: new Date(), messages: []}]); setActiveId('init'); } else { setSessions(remain); if(activeId === id) setActiveId(remain[0].id); }
+                setSessions(remain);
+                if (remain.length === 0) createNewSession(true);
+                else if (activeId === id) setActiveId(remain[0].id);
             };
 
             const handleFile = (e, type) => {
@@ -185,126 +328,160 @@
                 e.target.value = null;
             };
 
+            const fileToBase64 = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+
+            const extractTextFromPDF = async (file) => {
+                try {
+                    const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+                        const page = await pdf.getPage(i);
+                        const txt = await page.getTextContent();
+                        fullText += `[Hal ${i}]: ${txt.items.map(s => s.str).join(" ")}\n`;
+                    }
+                    return fullText;
+                } catch (e) { return "Error baca PDF."; }
+            };
+
             const handleSend = async (e) => {
                 e.preventDefault();
-                if ((!input.trim() && attachments.length === 0) || isLoading) return;
-
-                const txt = input;
-                const atts = [...attachments]; 
+                if ((!input.trim() && attachments.length === 0) || isLoading || !user) return;
                 
-                setSessions(prev => prev.map(s => {
-                    if (s.id === activeId) {
-                        let newTitle = s.title;
-                        const userMsgCount = s.messages.filter(m => m.role === 'user').length;
-                        if (userMsgCount === 0) newTitle = txt ? (txt.slice(0, 25) + (txt.length>25?'...':'')) : (atts.length > 0 ? `File: ${atts[0].name}` : 'Chat Baru');
-                        return { ...s, title: newTitle, messages: [...s.messages, { id: generateId(), role: 'user', text: txt, attachments: atts, timestamp: getTime() }] };
-                    }
-                    return s;
-                }));
-
+                const txt = input;
+                const atts = [...attachments];
                 setInput(""); setAttachments([]); setIsLoading(true);
 
-                let apiParts = [];
-                let contextText = txt;
-                const historyParts = messages.slice(-5).map(m => ({ role: m.role==='ai'?'model':'user', parts: [{ text: m.text }] }));
+                // Update Title & Save User Msg
+                if (messages.filter(m => m.id !== 'init').length === 0) {
+                    const newTitle = txt ? (txt.slice(0, 20) + (txt.length>20?'...':'')) : 'Lampiran File';
+                    db.updateSessionTitle(activeId, newTitle);
+                    setSessions(prev => prev.map(s => s.id === activeId ? {...s, title: newTitle} : s));
+                }
+                setMessages(prev => [...prev, db.saveMessage(activeId, 'user', txt, atts)]);
 
+                // Build Request
+                let apiParts = [];
+                let context = txt;
+                const history = messages.filter(m => m.id !== 'init').slice(-5).map(m => ({ role: m.role==='ai'?'model':'user', parts: [{ text: m.text }] }));
+                
                 try {
                     if (atts.length > 0) {
-                        contextText += `\n\n[Daftar Lampiran User:]\n`;
+                        context += `\n[Lampiran User]:\n`;
                         for (const att of atts) {
                             if (att.type === 'image') {
-                                const base64Data = await fileToBase64(att.file);
-                                apiParts.push({ inlineData: { mimeType: att.file.type, data: base64Data } });
-                                contextText += `- Gambar: ${att.name} (Data visual dikirim)\n`;
+                                apiParts.push({ inlineData: { mimeType: att.file.type, data: await fileToBase64(att.file) } });
+                                context += `- Gambar: ${att.name}\n`;
                             } else if (att.type === 'pdf') {
-                                const pdfText = await extractTextFromPDF(att.file);
-                                contextText += `- Dokumen PDF (${att.name}) ISI TEKS:\n${pdfText}\n---\n`;
+                                context += `- PDF (${att.name}):\n${await extractTextFromPDF(att.file)}\n`;
                             }
                         }
                     }
-                    apiParts.push({ text: contextText });
+                    apiParts.push({ text: context });
 
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ contents: [...historyParts, { role: 'user', parts: apiParts }], tools: [{ google_search: {} }] })
+                        body: JSON.stringify({ contents: [...history, { role: 'user', parts: apiParts }], tools: [{ google_search: {} }] })
                     });
-
+                    
                     const data = await res.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, respon tidak tersedia.";
-                    const sources = data.candidates?.[0]?.groundingMetadata?.groundingChunks?.filter(c => c.web?.uri).map(c => ({ title: c.web?.title, uri: c.web?.uri })) || [];
-                    const uniqueSources = [...new Map(sources.map(item => [item['uri'], item])).values()];
-
-                    setSessions(prev => prev.map(s => {
-                        if (s.id === activeId) return { ...s, messages: [...s.messages, { id: generateId(), role: 'ai', text, sources: uniqueSources, timestamp: getTime() }] };
-                        return s;
-                    }));
+                    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada respon.";
+                    const sources = data.candidates?.[0]?.groundingMetadata?.groundingChunks?.filter(c=>c.web?.uri).map(c=>({title:c.web?.title, uri:c.web?.uri})) || [];
+                    
+                    setMessages(prev => [...prev, db.saveMessage(activeId, 'ai', aiText, [], [...new Map(sources.map(s => [s.uri, s])).values()])]);
 
                 } catch (err) {
-                    setSessions(prev => prev.map(s => s.id === activeId ? {...s, messages: [...s.messages, { id: generateId(), role: 'ai', text: `Error: ${err.message}`, isError: true }]} : s));
+                    setMessages(prev => [...prev, { id: 'err', role: 'ai', text: `Error: ${err.message}`, isError: true }]);
                 } finally { setIsLoading(false); }
             };
 
             const renderMarkdown = (txt) => ({ __html: marked.parse(txt) });
 
             return (
-                <div className="flex h-full w-full relative">
-                    <div className={`fixed inset-y-0 left-0 z-[60] w-72 bg-[var(--bg-sidebar)] border-r border-white/5 flex flex-col transition-transform duration-300 transform md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                <div className="flex h-full w-full relative overflow-hidden">
+                    <AuthModal isOpen={!user} onLogin={setUser} />
+
+                    {/* SIDEBAR */}
+                    <div className={`fixed inset-y-0 left-0 z-[60] w-72 bg-[var(--bg-sidebar)] border-r border-white/5 flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                         <div className="h-16 flex items-center px-5 border-b border-white/5 safe-top">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20"><i className="fa-solid fa-cube text-white text-xs"></i></div>
-                                <div><h1 className="font-bold text-sm text-white tracking-wide leading-none">MetrologyPro</h1><span className="text-[10px] text-gray-500 font-mono">Enterprise</span></div>
-                            </div>
-                            <button onClick={() => setSidebarOpen(false)} className="md:hidden ml-auto text-gray-500 p-2"><i className="fa-solid fa-xmark"></i></button>
+                            <i className="fa-solid fa-cube text-blue-500 mr-3"></i>
+                            <div><h1 className="font-bold text-sm text-white">Metrologi Pro</h1><span className="text-[10px] text-gray-500">1.0 Version</span></div>
+                            <button onClick={() => setSidebarOpen(false)} className="md:hidden ml-auto text-gray-500"><i className="fa-solid fa-xmark"></i></button>
                         </div>
-                        <div className="p-4"><button onClick={createSession} className="w-full flex items-center justify-center gap-2 bg-[#1c1c1f] hover:bg-[#27272a] border border-white/5 text-white py-2.5 rounded-xl text-sm font-medium transition-all"><i className="fa-solid fa-plus text-blue-500"></i><span>Chat Baru</span></button></div>
-                        <div className="flex-1 overflow-y-auto px-2 space-y-1 scroller py-2"><p className="px-3 text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-2">Riwayat</p>{sessions.map(s => <SidebarItem key={s.id} session={s} active={activeId === s.id} onClick={() => {setActiveId(s.id); setSidebarOpen(false);}} onDelete={() => deleteSession(s.id)} />)}</div>
+                        <div className="p-4"><button onClick={() => createNewSession(false)} className="w-full bg-[#1c1c1f] hover:bg-[#27272a] border border-white/5 text-white py-2.5 rounded-xl text-sm font-medium"><i className="fa-solid fa-plus text-blue-500 mr-2"></i>Chat Baru</button></div>
+                        <div className="flex-1 overflow-y-auto px-2 space-y-1 scroller"><p className="px-3 text-[10px] font-bold text-gray-600 uppercase mb-2">Riwayat</p>{sessions.map(s => <SidebarItem key={s.id} session={s} active={activeId === s.id} onClick={() => {setActiveId(s.id); setSidebarOpen(false);}} onDelete={() => deleteSession(s.id)} />)}</div>
+                        
+                        {/* USER INFO & LOGOUT */}
                         <div className="p-4 border-t border-white/5 bg-black/20 safe-bottom">
-                            {authLoading ? <div className="text-center text-xs text-gray-500"><i className="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading Auth...</div> : user ? 
-                            <div className="flex items-center justify-between"><div className="flex items-center gap-3 overflow-hidden">{user.photoURL ? <img src={user.photoURL} className="w-9 h-9 rounded-full border border-white/10" /> : <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center">{user.displayName?.[0]}</div>}<div className="flex-1 min-w-0"><p className="text-xs font-bold text-white truncate">{user.displayName}</p><p className="text-[10px] text-gray-500 truncate">{user.email}</p></div></div><button onClick={handleLogout} className="text-gray-500 hover:text-red-400 p-2"><i className="fa-solid fa-right-from-bracket"></i></button></div> : 
-                            <button onClick={handleLogin} className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-bold transition-all shadow-lg shadow-blue-900/20"><i className="fa-brands fa-google"></i> Login Google</button>}
+                            {user && (
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-900/20 text-white">
+                                            {user.username.substring(0,2).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-bold text-white truncate">{user.username}</p>
+                                            <p className="text-[10px] text-gray-400 font-mono truncate">ID User : {user.id}</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setUser(null)} className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold py-2.5 rounded-lg transition-all">
+                                        <i className="fa-solid fa-right-from-bracket"></i> Keluar
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                    {sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"></div>}
+                    {sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/60 z-50 md:hidden"></div>}
 
-                    <div className="flex-1 flex flex-col h-full bg-[#09090b] relative w-full">
-                        <div className="md:hidden flex items-center justify-between px-4 h-16 border-b border-white/5 bg-[#09090b]/90 backdrop-blur z-40 sticky top-0 safe-top">
-                            <div className="flex items-center gap-2"><i className="fa-solid fa-shield-halved text-blue-500"></i><span className="font-bold text-white text-sm">MetrologyPro</span></div>
-                            <button onClick={() => setSidebarOpen(true)} className="text-gray-300 p-2"><i className="fa-solid fa-bars text-lg"></i></button>
+                    {/* MAIN AREA */}
+                    <div className="flex-1 flex flex-col h-full bg-[#09090b] relative w-full overflow-hidden">
+                        {/* Header Mobile */}
+                        <div className="md:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-[#09090b] z-40 safe-top">
+                            <span className="font-bold text-white text-sm">Metrologi Pro</span>
+                            <button onClick={() => setSidebarOpen(true)} className="text-gray-300"><i className="fa-solid fa-bars"></i></button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-8 scroller">
-                            {messages.length === 0 && <div className="flex flex-col items-center justify-center h-full text-gray-500 opacity-30 select-none"><i className="fa-solid fa-scale-balanced text-5xl mb-4"></i><p className="text-sm font-medium">MetrologyPro Enterprise</p></div>}
+
+                        {/* CHAT MESSAGES (Scrollable) */}
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-8 scroller w-full">
                             {messages.map((msg) => (
                                 <div key={msg.id} className={`msg-enter flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    {msg.role === 'ai' && <div className="w-9 h-9 rounded-xl bg-[#1c1c1f] border border-white/10 flex items-center justify-center flex-shrink-0 mt-1"><i className="fa-solid fa-robot text-blue-400 text-sm"></i></div>}
-                                    <div className={`flex flex-col gap-2 max-w-[85%] md:max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                        <div className="flex items-center gap-2 px-1"><span className="text-[10px] text-gray-500 font-mono opacity-70 uppercase tracking-wider">{msg.role === 'user' ? 'Anda' : 'Assistant'} • {msg.timestamp}</span></div>
-                                        {msg.attachments && msg.attachments.length > 0 && <div className="flex flex-wrap gap-2 justify-end">{msg.attachments.map((att, i) => (<div key={i} className="bg-[#1c1c1f] border border-white/10 rounded-lg p-2 flex items-center gap-3 pr-4 max-w-full">{att.type === 'image' && att.preview ? <img src={att.preview} className="h-10 w-10 rounded object-cover" /> : <div className={`h-10 w-10 flex items-center justify-center rounded-md ${att.type==='pdf' ? 'bg-red-500/10 text-red-400' : 'bg-white/10 text-gray-400'}`}><i className={`fa-solid ${att.type==='pdf' ? 'fa-file-pdf text-xl' : 'fa-file text-xl'}`}></i></div>}<span className="text-xs text-gray-300 truncate max-w-[150px] font-medium">{att.name}</span></div>))}</div>}
-                                        <div className={`p-5 rounded-2xl text-[0.935rem] shadow-sm border ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none border-blue-500 text-left user-content' : 'bg-[#18181b] text-gray-200 rounded-tl-none border-white/5'}`}>
+                                    {msg.role === 'ai' && <div className="w-8 h-8 rounded-lg bg-[#1c1c1f] border border-white/10 flex items-center justify-center flex-shrink-0 mt-1"><i className="fa-solid fa-robot text-blue-400 text-xs"></i></div>}
+                                    <div className={`flex flex-col gap-1 max-w-[90%] md:max-w-[80%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                        <div className="px-1"><span className="text-[10px] text-gray-500 font-mono uppercase opacity-70">{msg.role === 'user' ? user?.username : 'AI'} • {msg.timestamp}</span></div>
+                                        {msg.attachments && msg.attachments.length > 0 && <div className="flex flex-wrap gap-2 justify-end mb-1">{msg.attachments.map((att, i) => (<div key={i} className="bg-[#1c1c1f] border border-white/10 rounded px-2 py-1 text-xs text-gray-300 flex items-center gap-2"><i className={`fa-solid ${att.type==='image'?'fa-image text-blue-400':'fa-file-pdf text-red-400'}`}></i>{att.name}</div>))}</div>}
+                                        
+                                        <div className={`p-5 rounded-2xl text-[0.95rem] shadow-sm border ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none border-blue-500 user-content' : 'bg-[#18181b] text-gray-200 rounded-tl-none border-white/5'}`}>
                                             <div className="prose prose-invert" dangerouslySetInnerHTML={renderMarkdown(msg.text)}></div>
-                                            {msg.sources && msg.sources.length > 0 && <div className="mt-4 pt-4 border-t border-white/10"><p className="text-[10px] font-bold text-gray-500 uppercase mb-2">Sumber Referensi:</p><div className="flex flex-wrap gap-2">{msg.sources.map((src, i) => (<a key={i} href={src.uri} target="_blank" className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/20 hover:bg-black/40 rounded-md border border-white/10 text-[11px] text-blue-300 transition-colors no-underline"><i className="fa-solid fa-link text-[9px]"></i> {src.title}</a>))}</div></div>}
+                                            {msg.sources && msg.sources.length > 0 && <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-2"><div className="w-full text-[10px] font-bold text-gray-500 uppercase">Referensi:</div>{msg.sources.map((src, i) => (<a key={i} href={src.uri} target="_blank" className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/30 hover:bg-black/50 rounded-lg border border-white/10 text-[11px] text-blue-300 hover:text-blue-200 transition-all"><i className="fa-solid fa-link text-[10px]"></i> {src.title}</a>))}</div>}
                                         </div>
                                     </div>
                                 </div>
                             ))}
-                            {isLoading && <div className="flex gap-4 max-w-4xl mx-auto"><div className="w-9 h-9 rounded-xl bg-transparent flex items-center justify-center mt-1"><i className="fa-solid fa-robot text-gray-600 text-sm"></i></div><div className="px-5 py-4 bg-[#18181b] border border-white/5 rounded-2xl rounded-tl-none flex gap-1.5 items-center"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div></div></div>}
-                            <div ref={bottomRef} className="h-4"></div>
+                            {isLoading && <div className="flex gap-4 max-w-4xl mx-auto"><div className="w-8 h-8 rounded-lg bg-transparent flex items-center justify-center mt-1"><i className="fa-solid fa-robot text-gray-600 text-xs"></i></div><div className="px-5 py-4 bg-[#18181b] border border-white/5 rounded-2xl rounded-tl-none flex gap-1.5"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div></div></div>}
+                            <div ref={bottomRef} className="h-2"></div>
                         </div>
 
-                        <div className="p-3 md:p-5 z-30 bg-gradient-to-t from-[#09090b] to-transparent safe-bottom">
-                            <div className="max-w-4xl mx-auto relative glass-popover rounded-2xl p-2 transition-all shadow-2xl">
-                                {menuOpen && <div className="absolute bottom-full left-0 mb-2 bg-[#1c1c1f] border border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[220px] z-50 flex flex-col msg-enter">
-                                    <button onClick={() => { if(!user) alert("Login Google diperlukan."); else alert("Mode Simulasi Drive Lokal."); setMenuOpen(false); }} className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 border-b border-white/5 text-left"><i className="fa-brands fa-google-drive text-green-400 w-5 text-center text-lg"></i><div><div className="text-sm text-white font-medium">Google Drive</div><div className="text-[10px] text-gray-500">Pilih dari Cloud</div></div></button>
-                                    <button onClick={() => pdfRef.current.click()} className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 border-b border-white/5 text-left"><i className="fa-solid fa-file-pdf text-red-400 w-5 text-center text-lg"></i><div><div className="text-sm text-white font-medium">Upload PDF</div><div className="text-[10px] text-gray-500">Analisis Dokumen</div></div></button>
-                                    <button onClick={() => fileRef.current.click()} className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/5 text-left"><i className="fa-solid fa-image text-blue-400 w-5 text-center text-lg"></i><div><div className="text-sm text-white font-medium">Upload Gambar</div><div className="text-[10px] text-gray-500">Visi Komputer</div></div></button>
+                        {/* INPUT AREA (Fixed Bottom) */}
+                        <div className="flex-shrink-0 z-30 bg-[#09090b] border-t border-white/5 p-3 md:p-5 safe-bottom">
+                            <div className="max-w-4xl mx-auto relative glass-popover rounded-xl p-1.5 transition-all shadow-2xl bg-[#18181b]">
+                                {menuOpen && <div className="absolute bottom-full left-0 mb-2 bg-[#1c1c1f] border border-white/10 rounded-xl shadow-xl overflow-hidden min-w-[200px] z-50 flex flex-col msg-enter">
+                                    <button onClick={() => fileRef.current.click()} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left"><i className="fa-solid fa-image text-blue-400 w-5"></i><span className="text-sm text-gray-200">Upload Gambar</span></button>
+                                    <button onClick={() => pdfRef.current.click()} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left border-t border-white/5"><i className="fa-solid fa-file-pdf text-red-400 w-5"></i><span className="text-sm text-gray-200">Upload PDF</span></button>
                                 </div>}
                                 <input type="file" ref={fileRef} onChange={(e) => handleFile(e, 'image')} className="hidden" accept="image/*" />
                                 <input type="file" ref={pdfRef} onChange={(e) => handleFile(e, 'pdf')} className="hidden" accept=".pdf" />
-                                {attachments.length > 0 && <div className="flex gap-2 p-2 border-b border-white/5 overflow-x-auto">{attachments.map((att, i) => (<div key={i} className="relative bg-black/40 rounded-lg p-1.5 border border-white/10 group">{att.type==='image' && att.preview ? <img src={att.preview} className="h-12 w-12 rounded-md object-cover" /> : <div className={`h-12 w-12 flex items-center justify-center rounded-md ${att.type==='pdf' ? 'bg-red-500/10 text-red-400' : 'bg-white/10 text-gray-400'}`}><i className={`fa-solid ${att.type==='pdf' ? 'fa-file-pdf text-xl' : 'fa-file text-xl'}`}></i></div>}<button onClick={() => setAttachments(attachments.filter((_, idx) => idx!==i))} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-sm"><i className="fa-solid fa-xmark"></i></button></div>))}</div>}
+                                
+                                {attachments.length > 0 && <div className="flex gap-2 p-2 border-b border-white/5 overflow-x-auto mb-1">{attachments.map((att, i) => (<div key={i} className="relative bg-black/40 rounded px-2 py-1 text-xs text-gray-300 flex items-center gap-2 border border-white/10"><i className={`fa-solid ${att.type==='image'?'fa-image':'fa-file-pdf'}`}></i>{att.name}<button onClick={() => setAttachments(attachments.filter((_, idx) => idx!==i))} className="ml-2 hover:text-red-400"><i className="fa-solid fa-times"></i></button></div>))}</div>}
+
                                 <form onSubmit={handleSend} className="flex items-end gap-2">
-                                    <button type="button" onClick={() => setMenuOpen(!menuOpen)} className={`p-3 rounded-xl transition-all ${menuOpen ? 'bg-white/10 text-white rotate-45' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}><i className="fa-solid fa-plus text-lg"></i></button>
-                                    <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e); }}} placeholder="Apa yang ingin Anda tanyakan mengenai Direktorat Metrologi?" className="w-full bg-transparent border-none text-gray-200 placeholder-gray-500 focus:ring-0 resize-none max-h-32 min-h-[44px] py-3 pl-4 text-sm leading-normal" rows="1" style={{height:'auto'}}></textarea>
-                                    <button type="submit" disabled={!input.trim() && attachments.length === 0 || isLoading} className="p-3 bg-blue-600 hover:bg-blue-500 disabled:bg-white/5 disabled:text-gray-600 text-white rounded-xl transition-all shadow-lg"><i className="fa-solid fa-paper-plane text-sm"></i></button>
+                                    <button type="button" onClick={() => setMenuOpen(!menuOpen)} className="p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"><i className={`fa-solid fa-plus text-lg transition-transform ${menuOpen ? 'rotate-45' : ''}`}></i></button>
+                                    <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e); }}} placeholder="Apa yang ingin kamu ketahui tentang Direktorat Metrologi?" className="w-full bg-transparent border-none text-gray-200 placeholder-gray-500 focus:ring-0 resize-none max-h-32 min-h-[44px] py-3 pl-4 text-sm leading-relaxed" rows="1" style={{height:'auto'}}></textarea>
+                                    <button type="submit" disabled={!input.trim() && attachments.length === 0 || isLoading || !user} className="p-3 bg-blue-600 hover:bg-blue-500 disabled:bg-white/5 disabled:text-gray-600 text-white rounded-lg transition-all"><i className="fa-solid fa-paper-plane"></i></button>
                                 </form>
                             </div>
                         </div>
@@ -312,11 +489,8 @@
                 </div>
             );
         };
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-</body>
-</html>
-
-
-
+</body
