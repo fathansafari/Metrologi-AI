@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Metrologi Pro - Version 1.0</title>
+    <title>Than AI</title>
     
     <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,11 +12,10 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    
-    <!-- AlaSQL untuk Database SQL Client-Side -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alasql@1.7.3/dist/alasql.min.js"></script>
 
-    <!-- MathJax -->
+    <!-- MathJax & Icons -->
     <script>
     window.MathJax = {
       tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
@@ -24,51 +23,145 @@
     };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg-dark: #09090b; --bg-sidebar: #0f0f11; --accent: #3b82f6; }
-        body, html { margin: 0; padding: 0; background-color: var(--bg-dark); color: #e4e4e7; font-family: 'Plus Jakarta Sans', sans-serif; height: 100dvh; width: 100vw; overflow: hidden; }
-        #root { height: 100%; width: 100%; }
-        .safe-top { padding-top: env(safe-area-inset-top); }
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-        .scroller { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
-        .scroller::-webkit-scrollbar { width: 4px; }
+        /* CORE VARIABLES */
+        :root { 
+            --bg-main: #09090b; 
+            --bg-sec: #18181b; 
+            --accent: #3b82f6; 
+            --text-main: #e4e4e7;
+            --text-sec: #a1a1aa;
+            --border: rgba(255,255,255,0.08);
+            --msg-user: #2563eb;
+            --glass: rgba(24, 24, 27, 0.8);
+            --code-bg: #121214;
+            --font-main: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .theme-light {
+            --bg-main: #ffffff;
+            --bg-sec: #f8fafc;
+            --accent: #0f172a;
+            --text-main: #1e293b;
+            --text-sec: #64748b;
+            --border: #e2e8f0;
+            --msg-user: #0f172a;
+            --glass: rgba(255, 255, 255, 0.95);
+            --code-bg: #f1f5f9;
+        }
+
+        .theme-soft-dark {
+            --bg-main: #0f1419;
+            --bg-sec: #1a2332;
+            --accent: #3b82f6;
+            --text-main: #e8eef7;
+            --text-sec: #9ca3b3;
+            --border: rgba(255,255,255,0.06);
+            --msg-user: #2563eb;
+            --glass: rgba(26, 35, 50, 0.85);
+            --code-bg: #141b28;
+        }
+
+        body, html { margin: 0; padding: 0; background-color: var(--bg-main); color: var(--text-main); font-family: var(--font-main); height: 100vh; width: 100%; overflow: hidden; transition: background-color 0.3s ease, color 0.3s ease; }
+        #root { height: 100vh; width: 100%; display: flex; overflow: hidden; }
+        
+        /* Glass Panels */
+        .glass-panel { background: var(--bg-sec); border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        /* --- PROSE STYLING --- */
+        .prose { font-size: 0.95rem; line-height: 1.6; color: var(--text-main); max-width: none; }
+        .prose h1, .prose h2, .prose h3, .prose h4 { color: var(--text-main); font-weight: 700; margin: 0.6em 0 0.25em 0; line-height: 1.25; }
+        .prose h1 { font-size: 1.28em; color: #3b82f6; margin-bottom: 0.25rem; }
+        .prose h2 { font-size: 1.12em; color: #60a5fa; margin-bottom: 0.2rem; }
+        .prose h3 { font-size: 1.02em; color: #93c5fd; margin-bottom: 0.15rem; text-transform: none; }
+        .prose h4 { font-size: 0.9em; }
+        .prose p { margin: 0.5em 0; text-align: left; }
+        .prose ul, .prose ol { margin: 0.5em 0; padding-left: 1.5em; list-style-type: decimal; }
+        .prose li { margin: 0.35em 0; line-height: 1.5; }
+        .prose strong { color: #60a5fa; font-weight: 600; }
+        .prose em { color: var(--text-sec); font-style: italic; }
+        .prose > *:first-child { margin-top: 0; }
+        .prose > *:last-child { margin-bottom: 0; }
+        .prose blockquote { border-left: 3px solid #3b82f6; background: rgba(59, 130, 246, 0.05); padding: 0.8rem 1rem; margin: 0.8em 0; border-radius: 0 0.4rem 0.4rem 0; font-size: 0.9em; color: var(--text-sec); }
+        .prose table { width: 100%; border-collapse: collapse; border-radius: 0.5rem; overflow: hidden; margin: 0.8em 0; font-size: 0.85em; }
+        .prose th { background: rgba(59, 130, 246, 0.04); color: var(--text-main); font-weight: 700; padding: 0.6rem; text-align: left; }
+        .prose td { padding: 0.6rem; color: var(--text-main); }
+        .prose tr { border-bottom: none; }
+        .prose code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: #fca5a5; background: rgba(125,125,125,0.1); padding: 0.2em 0.4em; border-radius: 0.25em; border: 1px solid rgba(125,125,125,0.2); }
+        .prose pre { background: var(--code-bg); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.8rem 0; border: 1px solid var(--border); line-height: 1.4; }
+        .prose pre code { background: transparent; padding: 0; border: none; color: #a1a1aa; font-size: 0.9em; }
+        .prose a { color: #3b82f6; text-decoration: underline; }
+        .prose a:hover { text-decoration: none; opacity: 0.95; }
+
+        /* Code Canvas - Professional Code Display with Copy */
+        .code-canvas { background: var(--code-bg); border-radius: 0.5rem; margin: 0.8rem 0; overflow: hidden; }
+        .code-canvas-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(59, 130, 246, 0.03); }
+        .code-canvas-filename { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; font-weight: 600; color: #3b82f6; margin: 0; }
+        .code-canvas-copy { background: #3b82f6; color: white; padding: 0.4rem 0.8rem; border: none; border-radius: 0.25rem; font-size: 0.75em; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; font-family: 'JetBrains Mono', monospace; }
+        .code-canvas-copy:hover { background: #60a5fa; }
+        .code-canvas-copy:active { background: #1e40af; }
+        .code-canvas-content { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; padding: 1rem; color: #a1a1aa; overflow-x: auto; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+        .code-canvas-content code { background: transparent; padding: 0; border: none; color: #a1a1aa; }
+
+        /* Citations Card */
+        .citation-card { background: var(--bg-sec); border-radius: 0.5rem; padding: 0.6rem; margin-top: 0.5rem; transition: all 0.15s; display: flex; align-items: center; gap: 0.6rem; }
+        .citation-card:hover { background: rgba(59, 130, 246, 0.03); }
+        
+        /* Scrollbar */
+        .scroller { scroll-behavior: smooth; }
+        .scroller::-webkit-scrollbar { width: 5px; height: 5px; }
+        .scroller::-webkit-scrollbar-thumb { background: #52525b; border-radius: 99px; }
         .scroller::-webkit-scrollbar-track { background: transparent; }
-        .scroller::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
-        .glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .glass-popover { background: rgba(30, 30, 35, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
-        .modal-backdrop { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); }
+
+        /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .msg-enter { animation: fadeIn 0.3s ease-out forwards; }
-        @keyframes pulse-dot { 0%, 100% { opacity: 0.4; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
-        .typing-dot { animation: pulse-dot 1.2s infinite ease-in-out; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-100px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOutRight { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100px); } }
+        .slide-in { animation: fadeIn 0.3s ease-out forwards; }
+        .message-ai { animation: slideInLeft 0.4s ease-out forwards; }
+        .message-user { animation: slideInRight 0.4s ease-out forwards; }
+        .notification-enter { animation: slideInRight 0.3s ease-out forwards; }
+        .mic-active { animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60% { content: '...'; } 80%, 100% { content: ''; } }
+        @keyframes btnPulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        .btn-pulse { animation: btnPulse 0.45s ease; }
         
-        /* Prose Styling */
-        .prose { font-size: 0.95rem; max-width: none; line-height: 1.75; color: #e4e4e7; }
-        .prose h1, .prose h2, .prose h3 { color: #fff; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.75em; }
-        .prose h1 { font-size: 1.5em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3em; }
-        .prose p { margin-bottom: 1.25em; }
-        .prose ul, .prose ol { padding-left: 1.5em; margin-bottom: 1.25em; }
-        .prose li::marker { color: #60a5fa; }
-        .prose strong { color: #fff; }
-        .prose a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96, 165, 250, 0.3); }
-        mjx-container { color: #e4e4e7 !important; }
-        .user-content mjx-container { color: #fff !important; }
-        .prose code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; color: #f472b6; background: rgba(255,255,255,0.08); padding: 0.2em 0.4em; border-radius: 0.25em; }
-        .prose pre { background: #121214; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.1); }
-        .prose pre code { background: transparent; padding: 0; color: #e4e4e7; }
-        .user-content .prose p, .user-content .prose li { color: #fff; }
-        
-        /* Table Styles for DB Viewer */
-        .db-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        .db-table th { text-align: left; padding: 10px; background: rgba(255,255,255,0.05); color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
-        .db-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #a1a1aa; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .db-table tr:hover td { background: rgba(255,255,255,0.02); color: #fff; }
+        /* Smooth Animations */
+        @keyframes scaleInBounce { 0% { transform: scale(0.95); opacity: 0; } 70% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes fadeInUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOutDown { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(8px); } }
+        .animate-scaleIn { animation: scaleInBounce 0.3s ease-out forwards; }
+        .animate-fadeInUp { animation: fadeInUp 0.3s ease-out forwards; }
+        .animate-fadeOutDown { animation: fadeOutDown 0.2s ease-out forwards; }
+
+        /* PET CANVAS - Sticky Positioning */
+        #pet-canvas { 
+            position: relative; 
+            width: 100%;
+            height: auto;
+            min-height: 60px;
+            pointer-events: none; 
+            z-index: 20; 
+            display: block;
+            margin: 0 0 -8px 0;
+        }
+
+        /* Responsive tweaks: make wide containers fluid on small screens and remove heavy borders */
+        .max-w-4xl { max-width: 56rem; margin-left: auto; margin-right: auto; }
+        .max-w-xl { max-width: 36rem; }
+        @media (max-width: 768px) {
+            .max-w-4xl, .max-w-xl { max-width: 100% !important; padding-left: 1rem; padding-right: 1rem; }
+            .h-16 { height: 3.5rem; }
+            .p-4 { padding: 0.75rem; }
+            .md\:p-8 { padding: 1rem; }
+        }
     </style>
 </head>
 <body>
@@ -77,37 +170,35 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
-        // --- SQL DATABASE INIT ---
         const initSQL = () => {
             try {
-                alasql('CREATE localStorage DATABASE IF NOT EXISTS metrology_db');
-                alasql('ATTACH localStorage DATABASE metrology_db');
-                alasql('USE metrology_db');
-                alasql('CREATE TABLE IF NOT EXISTS users (id STRING PRIMARY KEY, username STRING, password STRING, created_at DATETIME)');
+                alasql('CREATE localStorage DATABASE IF NOT EXISTS thanai_db_v6_3');
+                alasql('ATTACH localStorage DATABASE thanai_db_v6_3');
+                alasql('USE thanai_db_v6_3');
+                alasql('CREATE TABLE IF NOT EXISTS users (id STRING PRIMARY KEY, username STRING, password STRING, role STRING, created_at DATETIME)');
                 alasql('CREATE TABLE IF NOT EXISTS sessions (id STRING PRIMARY KEY, user_id STRING, title STRING, timestamp DATETIME)');
                 alasql('CREATE TABLE IF NOT EXISTS messages (id STRING PRIMARY KEY, session_id STRING, role STRING, text STRING, attachments STRING, timestamp STRING, sources STRING)');
-                console.log("SQL Database Initialized");
-            } catch (e) {
-                console.error("SQL Init Error (Fallback):", e);
-                alasql('CREATE DATABASE IF NOT EXISTS metrology_db');
-                alasql('USE metrology_db');
-                alasql('CREATE TABLE IF NOT EXISTS users (id STRING PRIMARY KEY, username STRING, password STRING, created_at DATETIME)');
-                alasql('CREATE TABLE IF NOT EXISTS sessions (id STRING PRIMARY KEY, user_id STRING, title STRING, timestamp DATETIME)');
-                alasql('CREATE TABLE IF NOT EXISTS messages (id STRING PRIMARY KEY, session_id STRING, role STRING, text STRING, attachments STRING, timestamp STRING, sources STRING)');
-            }
+            } catch (e) { console.error("DB Error", e); }
         };
 
         const db = {
+            getGuestId: () => {
+                try {
+                    let gid = localStorage.getItem('guest_id_v6_3');
+                    if(!gid) { gid = 'guest_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('guest_id_v6_3', gid); }
+                    return gid;
+                } catch(e) { return 'guest_temp'; }
+            },
             register: (username, password) => {
                 const exists = alasql('SELECT * FROM users WHERE username = ?', [username]);
-                if (exists.length > 0) throw new Error("Username sudah terdaftar!");
+                if (exists.length > 0) throw new Error("Username sudah ada.");
                 const id = Math.random().toString(36).substr(2, 9);
-                alasql('INSERT INTO users VALUES (?, ?, ?, NOW())', [id, username, password]);
-                return { id, username };
+                alasql('INSERT INTO users VALUES (?, ?, ?, ?, NOW())', [id, username, password, 'user']);
+                return { id, username, role: 'user' };
             },
             login: (username, password) => {
                 const user = alasql('SELECT * FROM users WHERE username = ? AND password = ?', [username, password]);
-                if (user.length === 0) throw new Error("Username atau password salah!");
+                if (user.length === 0) throw new Error("Kombinasi salah.");
                 return user[0];
             },
             getSessions: (userId) => alasql('SELECT * FROM sessions WHERE user_id = ? ORDER BY timestamp DESC', [userId]),
@@ -123,117 +214,312 @@
             updateSessionTitle: (sessionId, title) => alasql('UPDATE sessions SET title = ? WHERE id = ?', [title, sessionId]),
             getMessages: (sessionId) => {
                 const msgs = alasql('SELECT * FROM messages WHERE session_id = ? ORDER BY timestamp ASC', [sessionId]);
-                return msgs.map(m => ({ ...m, attachments: m.attachments ? JSON.parse(m.attachments) : [], sources: m.sources ? JSON.parse(m.sources) : [] }));
+                return msgs.map(m => ({ ...m, attachments: JSON.parse(m.attachments || '[]'), sources: JSON.parse(m.sources || '[]') }));
             },
             saveMessage: (sessionId, role, text, attachments = [], sources = []) => {
                 const id = Math.random().toString(36).substr(2, 9);
                 const time = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
                 alasql('INSERT INTO messages VALUES (?, ?, ?, ?, ?, ?, ?)', [id, sessionId, role, text, JSON.stringify(attachments), time, JSON.stringify(sources)]);
                 return { id, role, text, attachments, timestamp: time, sources };
-            },
-            // ADMIN FUNCTIONS
-            getAllUsers: () => alasql('SELECT * FROM users'),
-            getAllSessions: () => alasql('SELECT * FROM sessions'),
-            getAllMessages: () => alasql('SELECT * FROM messages'),
-            resetDatabase: () => {
-                alasql('DROP TABLE users');
-                alasql('DROP TABLE sessions');
-                alasql('DROP TABLE messages');
-                localStorage.removeItem('alasql_metrology_db'); 
-                window.location.reload();
             }
         };
         initSQL();
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
         
-        // --- API KEY OBFUSCATION (PENYAMARAN) ---
-        // Kunci baru yang sudah dipecah agar tidak terdeteksi otomatis
-        const getKey = () => {
-            const p1 = "AIzaSyAd9db";
-            const p2 = "aLJ-dRH2xD";
-            const p3 = "anqrm1YBta";
-            const p4 = "y8Mt0fcw";
-            return p1 + p2 + p3 + p4;
-        };
+        console.log("App starting...");
+        console.log("React:", React);
+        console.log("ReactDOM:", ReactDOM);
         
+        const getKey = () => "AIzaSyAd9db" + "aLJ-dRH2xD" + "anqrm1YBta" + "y8Mt0fcw";
         const MODEL = "gemini-2.5-flash-preview-09-2025";
 
-        // --- DATABASE VIEWER MODAL ---
-        const DbViewer = ({ isOpen, onClose }) => {
-            const [activeTab, setActiveTab] = useState('users');
-            const [data, setData] = useState([]);
-
+        // --- ROBUST PIXEL PETS ENGINE ---
+        const PixelPets = ({ types = ['cat'] }) => {
+            const canvasRef = useRef(null);
+            const animationIdRef = useRef(null);
+            
             useEffect(() => {
-                if (isOpen) {
-                    refreshData();
-                }
-            }, [isOpen, activeTab]);
+                const canvas = canvasRef.current;
+                if (!canvas || !canvas.parentElement) return; // Safety check
 
-            const refreshData = () => {
-                let res = [];
-                if (activeTab === 'users') res = db.getAllUsers();
-                if (activeTab === 'sessions') res = db.getAllSessions();
-                if (activeTab === 'messages') res = db.getAllMessages();
-                setData(res);
-            };
+                // Constrain canvas to max-width-4xl equivalent (56rem = 896px)
+                const maxWidth = 896;
+                const containerWidth = Math.min(canvas.parentElement.offsetWidth, maxWidth);
+                canvas.width = containerWidth;
+                canvas.height = 60; 
 
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return; // Context check
+
+                ctx.imageSmoothingEnabled = false;
+                const scale = 2; 
+
+                // Initialize Pets with random positions
+                let activePets = types.map(t => ({
+                    type: t,
+                    x: Math.random() * (canvas.width/scale - 20) + 10,
+                    y: 29, // Lowered Y to "stick" to the bottom border
+                    dir: Math.random() > 0.5 ? 1 : -1,
+                    state: 'idle',
+                    timer: Math.random() * 100,
+                    frame: 0,
+                    speed: 0.08 + Math.random() * 0.1
+                }));
+
+                const drawPixel = (cx, cy, color) => {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(cx * scale, cy * scale, scale, scale);
+                };
+
+                // Sprite Definitions
+                const drawSprite = (x, y, dir, frame, state, petType) => {
+                    const facing = dir === 1 ? 1 : -1;
+                    ctx.save();
+                    ctx.translate(x * scale, y);
+                    ctx.scale(facing, 1);
+                    if (facing === -1) ctx.translate(-16 * scale, 0);
+
+                    // Colors Palette
+                    const pal = {
+                        cat: { main: '#3b82f6', sec: '#ffffff', eye: '#000000' },
+                        dog: { main: '#d97706', sec: '#fcd34d', eye: '#000000' },
+                        duck: { main: '#fbbf24', sec: '#f59e0b', eye: '#000000' },
+                        rabbit: { main: '#ffffff', sec: '#fbcfe8', eye: '#000000' },
+                        fox: { main: '#ea580c', sec: '#ffffff', eye: '#000000' },
+                        wolf: { main: '#94a3b8', sec: '#e2e8f0', eye: '#000000' },
+                        bear: { main: '#78350f', sec: '#92400e', eye: '#000000' },
+                        dino: { main: '#22c55e', sec: '#86efac', eye: '#000000' },
+                        crab: { main: '#ef4444', sec: '#fca5a5', eye: '#000000' },
+                        snail: { main: '#ec4899', sec: '#fce7f3', eye: '#000000' },
+                        turtle: { main: '#15803d', sec: '#4ade80', eye: '#000000' },
+                        slime: { main: '#06b6d4', sec: '#67e8f9', eye: '#ffffff' },
+                        robot: { main: '#64748b', sec: '#94a3b8', eye: '#3b82f6' },
+                        ghost: { main: '#ffffff', sec: '#e2e8f0', eye: '#000000' },
+                        bat: { main: '#1e293b', sec: '#475569', eye: '#ef4444' },
+                        spider: { main: '#18181b', sec: '#3f3f46', eye: '#ef4444' },
+                        snake: { main: '#10b981', sec: '#6ee7b7', eye: '#000000' },
+                        chicken: { main: '#ffffff', sec: '#ef4444', eye: '#000000' }
+                    };
+                    const c = pal[petType] || pal.cat;
+
+                    // DINO - T-Rex style with tail
+                    if (petType === 'dino') {
+                        ctx.fillStyle = c.main;
+                        ctx.fillRect(2*scale, 5*scale, 6*scale, 5*scale);
+                        ctx.fillRect(3*scale, 2*scale, 3*scale, 3*scale);
+                        drawPixel(4, 3, c.eye);
+                        drawPixel(2, 7, c.main); drawPixel(2, 8, c.main);
+                        drawPixel(9, 7, c.main); drawPixel(9, 8, c.main);
+                        let tailWave = Math.sin(frame * 0.15) * 1.5;
+                        drawPixel(9, 5 + Math.round(tailWave), c.main);
+                        drawPixel(10, 5 + Math.round(tailWave), c.main);
+                    }
+                    // SNAKE - Curvy with segments
+                    else if (petType === 'snake') {
+                        let curve = Math.sin(frame * 0.12);
+                        ctx.fillStyle = c.main;
+                        ctx.fillRect(3*scale, (7 + curve)*scale, 5*scale, 2*scale);
+                        ctx.fillRect((5 + curve*2)*scale, (5 + curve)*scale, 3*scale, 2*scale);
+                        ctx.fillRect((7 + curve*3)*scale, (8 + curve)*scale, 2*scale, 2*scale);
+                        drawPixel(6, Math.round(7 + curve), c.eye);
+                        drawPixel(6, Math.round(8 + curve), c.sec);
+                    }
+                    // GENERIC QUADRUPED
+                    else if (['cat','dog','fox','wolf','bear','rabbit'].includes(petType)) {
+                        ctx.fillStyle = c.main; ctx.fillRect(3*scale, 7*scale, 7*scale, 5*scale);
+                        ctx.fillRect(2*scale, 2*scale, 6*scale, 5*scale);
+                        drawPixel(3,4, c.sec); drawPixel(6,4, c.sec);
+                        drawPixel(4,4, c.eye); drawPixel(6,4, c.eye);
+                        if(petType==='rabbit') { drawPixel(3,0, c.main); drawPixel(3,1, c.main); drawPixel(6,0, c.main); drawPixel(6,1, c.main); }
+                        else if(petType==='bear') { drawPixel(2,2, c.main); drawPixel(7,2, c.main); }
+                        else { drawPixel(2,1, c.main); drawPixel(7,1, c.main); }
+                        if(petType!=='rabbit' && petType!=='bear') {
+                            let tailY = (Math.floor(frame/15)%2===0) ? 6 : 7;
+                            drawPixel(10, tailY, c.main);
+                        }
+                        if(state==='walk') {
+                            if((Math.floor(frame/10)%2===0)) { drawPixel(3,12,c.main); drawPixel(8,12,c.main); } 
+                            else { drawPixel(4,12,c.main); drawPixel(9,12,c.main); }
+                        } else { drawPixel(3,12,c.main); drawPixel(9,12,c.main); }
+                    }
+                    // BIRDS
+                    else if (['duck', 'chicken'].includes(petType)) {
+                        ctx.fillStyle = c.main; ctx.fillRect(3*scale, 6*scale, 7*scale, 5*scale);
+                        ctx.fillRect(3*scale, 2*scale, 5*scale, 4*scale);
+                        ctx.fillStyle = '#f97316'; ctx.fillRect(8*scale, 4*scale, 2*scale, 2*scale);
+                        drawPixel(5,3, c.eye);
+                        if(petType==='chicken') drawPixel(4,1, c.sec);
+                        ctx.fillStyle = '#f97316';
+                        if(state==='walk' && Math.floor(frame/10)%2===0) ctx.fillRect(4*scale, 11*scale, 2*scale, 1*scale);
+                        else ctx.fillRect(6*scale, 11*scale, 2*scale, 1*scale);
+                    }
+                    // CRAWLERS
+                    else if (['crab', 'spider', 'turtle', 'snail'].includes(petType)) {
+                        ctx.fillStyle = c.main; ctx.fillRect(3*scale, 8*scale, 8*scale, 4*scale);
+                        if(petType==='snail') { drawPixel(4,6, c.sec); drawPixel(5,5, c.sec); }
+                        if(petType==='turtle') { ctx.fillStyle = c.sec; ctx.fillRect(4*scale, 7*scale, 6*scale, 2*scale); }
+                        if(petType==='spider' || petType==='crab') {
+                            let legY = (Math.floor(frame/10)%2===0) ? 12 : 11;
+                            drawPixel(2, legY, c.main); drawPixel(11, legY, c.main); drawPixel(5, 12, c.main); drawPixel(8, 12, c.main);
+                        }
+                    }
+                    // SLIME - Jelly with blob effect
+                    else if (petType === 'slime') {
+                        let wobble = Math.sin(frame * 0.1) * 0.5;
+                        ctx.fillStyle = c.main;
+                        ctx.fillRect((3.5+wobble)*scale, 7*scale, 5*scale, 5*scale);
+                        ctx.fillRect((4+wobble)*scale, 6*scale, 4*scale, 1*scale);
+                        drawPixel(4, 8, c.eye); drawPixel(7, 8, c.eye);
+                        drawPixel(5, 9, c.sec); drawPixel(6, 9, c.sec);
+                    }
+                    // ROBOT - Boxy with details
+                    else if (petType === 'robot') {
+                        ctx.fillStyle = c.main;
+                        ctx.fillRect(2*scale, 2*scale, 8*scale, 4*scale);
+                        ctx.fillRect(3*scale, 6*scale, 6*scale, 5*scale);
+                        ctx.fillStyle = c.eye;
+                        ctx.fillRect(3*scale, 3*scale, 1*scale, 1*scale);
+                        ctx.fillRect(7*scale, 3*scale, 1*scale, 1*scale);
+                        ctx.fillStyle = c.sec;
+                        ctx.fillRect(5*scale, 8*scale, 1*scale, 2*scale);
+                        ctx.fillRect(6*scale, 8*scale, 1*scale, 2*scale);
+                        let blink = (Math.floor(frame/30)%4===0) ? 0.3 : 1;
+                        ctx.globalAlpha = blink;
+                    }
+                    // GHOST - Wavy bottom with expressive eyes
+                    else if (petType === 'ghost') {
+                        let hoverY = (Math.floor(frame/20)%2===0) ? -2 : 0;
+                        ctx.translate(0, hoverY*scale);
+                        ctx.fillStyle = c.main;
+                        ctx.fillRect(3*scale, 5*scale, 6*scale, 6*scale);
+                        ctx.fillRect(2*scale, 8*scale, 2*scale, 3*scale);
+                        ctx.fillRect(9*scale, 8*scale, 2*scale, 3*scale);
+                        drawPixel(4, 7, c.eye); drawPixel(7, 7, c.eye);
+                        drawPixel(5, 9, c.eye); drawPixel(6, 9, c.eye);
+                    }
+                    // BAT - Wings spread
+                    else if (petType === 'bat') {
+                        let flapFrame = Math.floor(frame/8)%3;
+                        let wingSpread = flapFrame === 0 ? 3 : flapFrame === 1 ? 2 : 1;
+                        ctx.fillStyle = c.main;
+                        ctx.fillRect(4*scale, 7*scale, 4*scale, 4*scale);
+                        ctx.fillStyle = c.sec;
+                        ctx.fillRect((4-wingSpread)*scale, 8*scale, wingSpread*scale, 2*scale);
+                        ctx.fillRect((8+wingSpread)*scale, 8*scale, wingSpread*scale, 2*scale);
+                        drawPixel(5, 8, c.eye); drawPixel(7, 8, c.eye);
+                    }
+                    // SPIDER - 8 legs with animation
+                    else if (petType === 'spider') {
+                        ctx.fillStyle = c.main;
+                        ctx.fillRect(4*scale, 6*scale, 5*scale, 4*scale);
+                        drawPixel(5, 7, c.eye); drawPixel(7, 7, c.eye);
+                        let legPhase = Math.floor(frame/6)%3;
+                        ctx.fillStyle = c.sec;
+                        drawPixel(1, 8+(legPhase===0?1:0), c.main);
+                        drawPixel(11, 8+(legPhase===0?1:0), c.main);
+                        drawPixel(2, 10+(legPhase===1?1:0), c.main);
+                        drawPixel(10, 10+(legPhase===1?1:0), c.main);
+                    }
+                    // OTHERS
+                    else {
+                        ctx.fillStyle = c.main; ctx.fillRect(3*scale, 6*scale, 6*scale, 6*scale);
+                        drawPixel(4,5, c.eye); drawPixel(7,5, c.eye);
+                    }
+
+                    ctx.restore();
+                };
+
+                const animate = () => {
+                    if (!ctx) return;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    activePets.forEach(pet => {
+                        pet.timer++;
+                        pet.frame++;
+
+                        if (pet.state === 'idle') {
+                            if (pet.timer > 120 + Math.random()*280) {
+                                pet.state = Math.random() > 0.4 ? 'walk' : 'idle';
+                                if(pet.state === 'walk') pet.dir = Math.random() > 0.5 ? 1 : -1;
+                                pet.timer = 0;
+                            }
+                        } else if (pet.state === 'walk') {
+                            pet.x += pet.speed * pet.dir;
+                            if (pet.x > (canvas.width/scale) - 16) { pet.dir = -1; }
+                            if (pet.x < 5) { pet.dir = 1; }
+                            if (pet.timer > 200 + Math.random()*400) {
+                                pet.state = 'idle';
+                                pet.timer = 0;
+                            }
+                        }
+                        drawSprite(pet.x, pet.y, pet.dir, pet.frame, pet.state, pet.type);
+                    });
+
+                    animationIdRef.current = requestAnimationFrame(animate);
+                };
+
+                animate();
+                
+                const handleResize = () => {
+                    if(canvas && canvas.parentElement) {
+                        canvas.width = canvas.parentElement.offsetWidth;
+                        canvas.height = 60;
+                    }
+                };
+                window.addEventListener('resize', handleResize);
+
+                return () => {
+                    cancelAnimationFrame(animationIdRef.current);
+                    window.removeEventListener('resize', handleResize);
+                };
+            }, [types]);
+
+            return <canvas ref={canvasRef} id="pet-canvas" />;
+        };
+
+        // --- COMPONENTS ---
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
             if (!isOpen) return null;
-
-            const tabs = [
-                { id: 'users', label: 'Users' },
-                { id: 'sessions', label: 'Sessions' },
-                { id: 'messages', label: 'Messages' }
-            ];
-
             return (
-                <div className="fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
-                    <div className="bg-[#18181b] w-full max-w-4xl h-[80vh] rounded-2xl border border-white/10 flex flex-col overflow-hidden shadow-2xl animate-[fadeIn_0.2s_ease-out]">
-                        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/20">
-                            <div className="flex items-center gap-2">
-                                <i className="fa-solid fa-database text-blue-500"></i>
-                                <h2 className="text-white font-bold">Database Administrator</h2>
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-[fadeIn_0.2s]">
+                    <div className="glass-panel w-full max-w-md rounded-2xl p-6 relative flex flex-col max-h-[90vh]">
+                        <div className="flex justify-between items-center mb-4 border-b border-[var(--border)] pb-3 flex-shrink-0">
+                            <h3 className="text-sm font-bold uppercase tracking-wider">{title}</h3>
+                            <button onClick={onClose} className="text-[var(--text-sec)] hover:text-[var(--text-main)] transition-colors"><i className="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div className="overflow-y-auto scroller">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ConfirmDialog = ({ data, onConfirm, onCancel }) => {
+            if (!data) return null;
+            const confirmLabel = data.confirmLabel || (data.type === 'logout' ? 'Logout' : 'Hapus');
+            const cancelLabel = data.cancelLabel || 'Batal';
+            const confirmClass = data.type === 'logout' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-red-600 hover:bg-red-500';
+            return (
+                <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-[fadeIn_0.2s]">
+                    <div className="glass-panel w-full max-w-sm rounded-2xl p-6 flex flex-col gap-4 border border-[var(--border)]">
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                                <i className="fa-solid fa-exclamation text-yellow-500"></i>
                             </div>
-                            <button onClick={onClose} className="text-gray-400 hover:text-white"><i className="fa-solid fa-xmark text-lg"></i></button>
+                            <div className="flex-1">
+                                <h3 className="font-bold text-sm mb-1">{data.title}</h3>
+                                <p className="text-xs text-[var(--text-sec)]">{data.message}</p>
+                            </div>
                         </div>
-                        
-                        <div className="flex border-b border-white/10">
-                            {tabs.map(t => (
-                                <button key={t.id} onClick={() => setActiveTab(t.id)} className={`px-4 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === t.id ? 'bg-blue-600/10 text-blue-400 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-300'}`}>
-                                    {t.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex-1 overflow-auto p-4 scroller bg-[#09090b]">
-                            {data.length === 0 ? (
-                                <div className="text-center text-gray-500 mt-10 italic">Tabel kosong. Belum ada data.</div>
-                            ) : (
-                                <table className="db-table">
-                                    <thead>
-                                        <tr>
-                                            {Object.keys(data[0]).map(key => <th key={key}>{key}</th>)}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {data.map((row, i) => (
-                                            <tr key={i}>
-                                                {Object.values(row).map((val, j) => (
-                                                    <td key={j} title={val}>{typeof val === 'object' ? JSON.stringify(val) : val}</td>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-
-                        <div className="p-4 border-t border-white/10 bg-black/20 flex justify-between items-center">
-                            <p className="text-[10px] text-gray-500">Data tersimpan di LocalStorage browser.</p>
-                            <button onClick={() => { if(confirm("HAPUS SEMUA DATA? Tindakan ini tidak bisa dibatalkan.")) db.resetDatabase(); }} className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-bold transition-all">
-                                <i className="fa-solid fa-trash-can mr-2"></i>Reset Database
+                        <div className="flex gap-2 pt-2">
+                            <button onClick={onCancel} className="flex-1 py-2 bg-[var(--bg-sec)] hover:bg-[var(--bg-main)] border border-[var(--border)] rounded-lg text-xs font-bold transition-all">
+                                {cancelLabel}
+                            </button>
+                            <button onClick={onConfirm} className={`flex-1 py-2 text-white rounded-lg text-xs font-bold transition-all ${confirmClass}`}>
+                                {confirmLabel}
                             </button>
                         </div>
                     </div>
@@ -241,282 +527,948 @@
             );
         };
 
-        const AuthModal = ({ isOpen, onLogin }) => {
-            const [isRegister, setIsRegister] = useState(false);
-            const [username, setUsername] = useState("");
-            const [password, setPassword] = useState("");
-            const [error, setError] = useState("");
+        const SettingsModal = ({ isOpen, onClose, theme, setTheme, user, onLogout, myPets, setMyPets, exportChat, summarizeChat, aiTone, setAiTone }) => {
+            const [tab, setTab] = useState('info');
+            const allPets = [
+                'cat', 'dog', 'duck', 'rabbit', 'fox', 'wolf', 
+                'bear', 'dino', 'crab', 'snail', 'turtle', 'slime',
+                'robot', 'ghost', 'bat', 'spider', 'snake', 'chicken'
+            ];
 
-            if (!isOpen) return null;
+            const togglePet = (p) => {
+                if (myPets.includes(p)) {
+                    if (myPets.length > 1) setMyPets(myPets.filter(item => item !== p));
+                } else {
+                    if (myPets.length < 5) setMyPets([...myPets, p]);
+                    else alert("Maksimal 5 pets!");
+                }
+            };
 
-            const handleSubmit = (e) => {
+            if(!isOpen) return null;
+            return (
+                <Modal isOpen={isOpen} onClose={onClose} title="Pengaturan">
+                    <div className="flex gap-1 mb-4 p-1 bg-black/10 rounded-lg flex-shrink-0 border border-[var(--border)]">
+                        {['info', 'theme', 'pets', 'ai', 'help'].map(t => (
+                            <button key={t} onClick={() => setTab(t)} className={`flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all ${tab===t?'bg-[var(--bg-sec)] text-[var(--text-main)] shadow-sm':'text-[var(--text-sec)] hover:text-[var(--text-main)]'}`}>
+                                {t}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="min-h-[250px]">
+                        {tab === 'info' && (
+                            <div className="space-y-4 text-sm">
+                                <div className="p-4 rounded-xl bg-[var(--bg-sec)] border border-[var(--border)]">
+                                    <div className="flex justify-between items-center mb-2"><span className="text-[var(--text-sec)]">Model</span> <span className="font-mono text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">Gemini 2.5</span></div>
+                                    <div className="flex justify-between items-center mb-2"><span className="text-[var(--text-sec)]">Engine</span> <span className="font-mono text-xs">Research V6.2</span></div>
+                                    <div className="flex justify-between items-center"><span className="text-[var(--text-sec)]">Status</span> <span className="text-[10px] font-bold text-green-400 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span> ONLINE</span></div>
+                                </div>
+                                {user.role !== 'guest' && (
+                                    <button onClick={onLogout} className="w-full py-2.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg font-bold transition-all border border-red-500/20 text-xs">
+                                        LOGOUT AKUN
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                        {tab === 'theme' && (
+                            <div className="grid grid-cols-3 gap-3">
+                                <button onClick={() => setTheme('dark')} className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${theme==='dark'?'border-blue-500 bg-blue-500/5':'border-[var(--border)] hover:bg-[var(--bg-sec)]'}`}>
+                                    <div className="w-6 h-6 rounded-full bg-[#09090b] border border-gray-700"></div>
+                                    <span className="text-xs font-bold">Dark</span>
+                                </button>
+                                <button onClick={() => setTheme('soft-dark')} className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${theme==='soft-dark'?'border-blue-500 bg-blue-500/5':'border-[var(--border)] hover:bg-[var(--bg-sec)]'}`}>
+                                    <div className="w-6 h-6 rounded-full bg-[#1a2332] border border-blue-400"></div>
+                                    <span className="text-xs font-bold">Soft</span>
+                                </button>
+                                <button onClick={() => setTheme('light')} className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${theme==='light'?'border-blue-500 bg-blue-500/5':'border-[var(--border)] hover:bg-[var(--bg-sec)]'}`}>
+                                    <div className="w-6 h-6 rounded-full bg-white border border-gray-200"></div>
+                                    <span className="text-xs font-bold">Light</span>
+                                </button>
+                            </div>
+                        )}
+                        {tab === 'pets' && (
+                            <div>
+                                <p className="text-[10px] text-[var(--text-sec)] mb-3 uppercase font-bold text-center">Pilih Maksimal 5 Pets ({myPets.length}/5)</p>
+                                <div className="grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto scroller">
+                                    {allPets.map(p => (
+                                        <button key={p} onClick={() => togglePet(p)} className={`p-2 rounded-lg border flex flex-col items-center gap-1 transition-all ${myPets.includes(p)?'border-blue-500 bg-blue-500/10 text-blue-400':'border-[var(--border)] hover:bg-[var(--bg-sec)] text-[var(--text-sec)]'}`}>
+                                            <span className="text-xs capitalize font-bold">{p}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {tab === 'ai' && (
+                            <div className="space-y-4 text-sm">
+                                <div>
+                                    <h4 className="font-bold text-blue-400 mb-3 text-xs uppercase"><i className="fa-solid fa-wand-magic-sparkles mr-2"></i> Gaya Respons AI</h4>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['professional', 'casual', 'technical', 'academic'].map(tone => (
+                                            <button key={tone} onClick={() => setAiTone(tone)} className={`p-2.5 rounded-lg border transition-all text-xs font-semibold capitalize ${aiTone === tone ? 'border-indigo-500 bg-indigo-500/10 text-indigo-400' : 'border-[var(--border)] hover:bg-[var(--bg-sec)] text-[var(--text-sec)]'}`}>
+                                                {tone === 'professional' ? '💼 Profesional' : tone === 'casual' ? '😊 Santai' : tone === 'technical' ? '⚙️ Teknis' : '🎓 Akademis'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-[var(--text-sec)] mt-2">Pilihan gaya akan mempengaruhi tone respons AI pada chat berikutnya.</p>
+                                </div>
+                                <div className="border-t border-[var(--border)] pt-3">
+                                    <h4 className="font-bold text-green-400 mb-2 text-xs uppercase"><i className="fa-solid fa-download mr-2"></i> Aksi Chat</h4>
+                                    <div className="space-y-1.5">
+                                        <button onClick={exportChat} disabled={false} className="w-full py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-xs font-semibold transition-all border border-green-500/20">
+                                            <i className="fa-solid fa-file-export mr-2"></i> Ekspor Chat (.txt)
+                                        </button>
+                                        <button onClick={summarizeChat} disabled={false} className="w-full py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-xs font-semibold transition-all border border-indigo-500/20">
+                                            <i className="fa-solid fa-compress mr-2"></i> Ringkas Chat
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {tab === 'help' && (
+                            <div className="space-y-4 text-sm">
+                                <div className="border border-[var(--border)] rounded-lg p-4 bg-[var(--bg-sec)]">
+                                    <h4 className="font-bold text-indigo-400 mb-2 text-sm uppercase"><i className="fa-solid fa-gear mr-2"></i> Panduan Fitur Utama</h4>
+                                    <ol className="list-decimal pl-4 space-y-2 text-sm text-[var(--text-sec)]">
+                                        <li><strong>Memulai Chat:</strong> Gunakan tombol "Chat Baru" untuk membuat sesi baru dan simpan riwayat (tersedia untuk akun member).</li>
+                                        <li><strong>Upload & Analisis Excel:</strong> Klik ikon klip → pilih "Excel Data". Sistem akan menampilkan preview, mendeteksi kolom kosong, duplikat, dan inkonsistensi.</li>
+                                        <li><strong>Upload Gambar/PDF:</strong> Unggah file untuk analisis; gambar akan dianalisis inline, PDF akan diproses (preview terbatas).</li>
+                                        <li><strong>Batalkan Aksi:</strong> Saat model memproses, tombol "Batalkan" muncul di sebelah kanan input untuk menghentikan proses.</li>
+                                        <li><strong>Salin Jawaban:</strong> Tombol "Copy" tersedia di setiap jawaban AI untuk menyalin teks hasil cepat.</li>
+                                        <li><strong>Pengaturan & Tema:</strong> Di menu pengaturan Anda dapat mengganti tema, mengelola pets, dan menutup sesi.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Modal>
+            );
+        };
+
+        const AuthForm = ({ onClose, onLogin }) => {
+            const [isReg, setIsReg] = useState(false);
+            const [form, setForm] = useState({ u: '', p: '' });
+            const [err, setErr] = useState('');
+
+            const submit = (e) => {
                 e.preventDefault();
-                setError("");
+                setErr('');
+                if (isReg && form.p.length < 8) { setErr("Password min. 8 karakter!"); return; }
                 try {
-                    if (!username || !password) throw new Error("Mohon isi username dan password.");
-                    let user = isRegister ? db.register(username, password) : db.login(username, password);
-                    onLogin(user);
-                } catch (err) { setError(err.message); }
+                    const u = isReg ? db.register(form.u, form.p) : db.login(form.u, form.p);
+                    onLogin(u);
+                    onClose();
+                } catch(e) { setErr(e.message); }
             };
 
             return (
-                <div className="fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
-                    <div className="glass-popover w-full max-w-sm rounded-2xl p-6 animate-[fadeIn_0.3s_ease-out] border border-white/10">
-                        <div className="text-center mb-6">
-                            <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20"><i className="fa-solid fa-cube text-white text-xl"></i></div>
-                            <h2 className="text-xl font-bold text-white">Metrologi Pro</h2>
-                            <p className="text-xs text-gray-400 mt-1">Version 1.0</p>
+                <Modal isOpen={true} onClose={onClose} title={isReg ? "Daftar Akun" : "Login Member"}>
+                    <form onSubmit={submit} className="space-y-4">
+                        {err && <div className="p-2 bg-red-500/10 text-red-400 text-[10px] rounded text-center font-bold animate-[fadeIn_0.2s]">{err}</div>}
+                        <div className="space-y-1">
+                            <label className="text-[10px] text-[var(--text-sec)] uppercase font-bold tracking-wider">Username</label>
+                            <input autoFocus type="text" value={form.u} onChange={e => setForm({...form, u: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-2.5 outline-none focus:border-blue-500 transition-colors text-sm" />
                         </div>
-                        {error && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg text-center">{error}</div>}
-                        <form onSubmit={handleSubmit} className="space-y-3">
-                            <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-[#1c1c1f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-gray-600" placeholder="Username" />
-                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#1c1c1f] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-gray-600" placeholder="Password" />
-                            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition-all shadow-lg mt-2">{isRegister ? 'Buat Akun' : 'Masuk'}</button>
-                        </form>
-                        <p className="mt-4 text-center text-xs text-gray-500 cursor-pointer hover:text-white transition-colors" onClick={() => { setIsRegister(!isRegister); setError(""); }}>{isRegister ? "Sudah punya akun? Login" : "Belum punya akun? Daftar"}</p>
+                        <div className="space-y-1">
+                            <label className="text-[10px] text-[var(--text-sec)] uppercase font-bold tracking-wider">Password {isReg && "(Min. 8)"}</label>
+                            <input type="password" value={form.p} onChange={e => setForm({...form, p: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-2.5 outline-none focus:border-blue-500 transition-colors text-sm" />
+                        </div>
+                        <button className="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-bold text-white shadow-lg shadow-blue-500/20 transition-all text-sm mt-2">
+                            {isReg ? 'Buat Akun' : 'Masuk'}
+                        </button>
+                    </form>
+                    <div className="mt-4 text-center">
+                        <button onClick={() => { setIsReg(!isReg); setErr(''); }} className="text-xs text-[var(--text-sec)] hover:text-[var(--text-main)] transition-colors">
+                            {isReg ? "Sudah punya akun? Login" : "Belum punya akun? Daftar"}
+                        </button>
                     </div>
+                </Modal>
+            );
+        };
+
+        // --- CODE RENDERER COMPONENT ---
+        const CodeRenderer = ({ text, onCopy }) => {
+            const parseCodeBlocks = (txt) => {
+                const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+                const blocks = [];
+                let lastIndex = 0;
+                let match;
+                
+                while ((match = codeBlockRegex.exec(txt)) !== null) {
+                    // Add text before code block
+                    if (match.index > lastIndex) {
+                        blocks.push({ type: 'text', content: txt.substring(lastIndex, match.index) });
+                    }
+                    // Add code block
+                    blocks.push({ type: 'code', lang: match[1] || 'text', content: match[2].trim() });
+                    lastIndex = codeBlockRegex.lastIndex;
+                }
+                
+                // Add remaining text
+                if (lastIndex < txt.length) {
+                    blocks.push({ type: 'text', content: txt.substring(lastIndex) });
+                }
+                
+                return blocks.length > 0 ? blocks : [{ type: 'text', content: txt }];
+            };
+
+            const blocks = parseCodeBlocks(text);
+            
+            return (
+                <div className="prose prose-invert">
+                    {blocks.map((block, i) => 
+                        block.type === 'code' ? (
+                            <div key={i} className="code-canvas">
+                                <div className="code-canvas-header">
+                                    <span className="code-canvas-filename">{block.lang}</span>
+                                    <button 
+                                        onClick={() => onCopy(block.content, block.lang)}
+                                        className="code-canvas-copy"
+                                    >
+                                        <i className="fa-solid fa-copy"></i> Salin
+                                    </button>
+                                </div>
+                                <div className="code-canvas-content">
+                                    {block.content}
+                                </div>
+                            </div>
+                        ) : (
+                            <div key={i} dangerouslySetInnerHTML={{ __html: marked.parse(block.content) }}></div>
+                        )
+                    )}
                 </div>
             );
         };
 
-        const SidebarItem = ({ session, active, onClick, onDelete }) => (
-            <div onClick={onClick} className={`group flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all border ${active ? 'bg-white/10 border-white/10 text-white' : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200'}`}>
-                <i className={`fa-regular fa-message text-xs ${active ? 'text-blue-400' : 'opacity-50'}`}></i>
-                <div className="flex-1 overflow-hidden"><p className="text-sm font-medium truncate">{session.title}</p></div>
-                <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 transition-all"><i className="fa-solid fa-xmark text-xs"></i></button>
-            </div>
-        );
-
         // --- MAIN APP ---
         const App = () => {
-            const [user, setUser] = useState(null);
+            const [user, setUser] = useState({ id: db.getGuestId(), username: 'Tamu', role: 'guest' });
+            const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+            
+            // Apply theme to document
+            useEffect(() => {
+                localStorage.setItem('theme', theme);
+                if (theme === 'dark') document.documentElement.classList.remove('theme-light', 'theme-soft-dark');
+                else if (theme === 'light') {
+                    document.documentElement.classList.remove('theme-soft-dark');
+                    document.documentElement.classList.add('theme-light');
+                } else if (theme === 'soft-dark') {
+                    document.documentElement.classList.remove('theme-light');
+                    document.documentElement.classList.add('theme-soft-dark');
+                }
+            }, [theme]);
+            const [myPets, setMyPets] = useState(JSON.parse(localStorage.getItem('my_pets_v6_3') || '["cat","dog"]'));
             const [sessions, setSessions] = useState([]);
             const [activeId, setActiveId] = useState(null);
             const [messages, setMessages] = useState([]);
-            const [input, setInput] = useState("");
-            const [isLoading, setIsLoading] = useState(false);
-            const [sidebarOpen, setSidebarOpen] = useState(false);
-            const [menuOpen, setMenuOpen] = useState(false);
-            const [attachments, setAttachments] = useState([]);
-            const [showDb, setShowDb] = useState(false);
             
+            const [input, setInput] = useState("");
+            const [attachments, setAttachments] = useState([]);
+            const [isListening, setIsListening] = useState(false);
+            const [isLoading, setIsLoading] = useState(false);
+            const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+            
+            const [modals, setModals] = useState({ auth: false, settings: false });
+            const [previewImg, setPreviewImg] = useState(null);
+            const [showAttachMenu, setShowAttachMenu] = useState(false);
+            const [notification, setNotification] = useState(null);
+            const [confirmDialog, setConfirmDialog] = useState(null);
+            const [newChatPulse, setNewChatPulse] = useState(false);
+            const [deletingSessionId, setDeletingSessionId] = useState(null);
+            const [aiTone, setAiTone] = useState('professional'); // tone: professional, casual, technical, academic
+
             const bottomRef = useRef(null);
+            const chatContainerRef = useRef(null);
+            const userScrolledUpRef = useRef(false);
             const fileRef = useRef(null);
-            const pdfRef = useRef(null);
+            const abortRef = useRef(null);
 
-            useEffect(() => {
-                if (user) {
-                    const userSessions = db.getSessions(user.id);
-                    if (userSessions.length === 0) createNewSession(true);
-                    else {
-                        setSessions(userSessions);
-                        setActiveId(userSessions[0].id);
+            const scrollToBottom = (smooth = true) => {
+                setTimeout(() => {
+                    try { bottomRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' }); } catch(e) {}
+                }, 60);
+            };
+
+            const handleScroll = () => {
+                const el = chatContainerRef.current;
+                if (!el) return;
+                const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 60;
+                userScrolledUpRef.current = !atBottom;
+            };
+            
+            const CodeRenderer = ({ text, onCopy }) => {
+                // Parse markdown-style fenced code blocks and plain text
+                const parseCodeBlocks = (txt) => {
+                    // Updated regex to handle code blocks with or without language tag
+                    const codeBlockRegex = /```[\s]*(\w+)?[\s]*\n([\s\S]*?)[\s]*```/g;
+                    const blocks = [];
+                    let lastIndex = 0;
+                    let match;
+
+                    while ((match = codeBlockRegex.exec(txt)) !== null) {
+                        if (match.index > lastIndex) {
+                            blocks.push({ type: 'text', content: txt.substring(lastIndex, match.index) });
+                        }
+                        const lang = match[1] || 'text';
+                        const content = match[2].trim();
+                        blocks.push({ type: 'code', lang: lang, content: content });
+                        lastIndex = codeBlockRegex.lastIndex;
                     }
+
+                    if (lastIndex < txt.length) blocks.push({ type: 'text', content: txt.substring(lastIndex) });
+                    if (blocks.length === 0) return [{ type: 'text', content: txt }];
+                    return blocks;
+                };
+
+                // Support multi-file separator inside a single code block:
+                // // ===== FILENAME.EXT =====
+                const splitMultiFile = (code) => {
+                    const parts = [];
+                    const lines = code.split('\n');
+                    let current = { filename: null, content: [] };
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+                        const m = line.match(/^\/\/\s*=+\s*(.+?)\s*=+\s*$/);
+                        if (m) {
+                            if (current.filename || current.content.length) {
+                                parts.push({ filename: current.filename || 'file', content: current.content.join('\n') });
+                            }
+                            current = { filename: m[1].trim(), content: [] };
+                        } else {
+                            current.content.push(line);
+                        }
+                    }
+                    if (current.filename || current.content.length) parts.push({ filename: current.filename || 'file', content: current.content.join('\n') });
+                    return parts;
+                };
+
+                const blocks = parseCodeBlocks(text);
+                
+                // Debug log untuk tracking code block detection
+                if (blocks.some(b => b.type === 'code')) {
+                    console.log('✅ Code blocks detected:', blocks.filter(b => b.type === 'code').length);
                 } else {
-                    setSessions([]); setMessages([]); setActiveId(null);
+                    console.log('⚠️ No code blocks found in response');
                 }
-            }, [user]);
 
-            useEffect(() => {
-                if (activeId) {
-                    const msgs = db.getMessages(activeId);
-                    if (msgs.length === 0) setMessages([{ id: 'init', role: 'ai', text: "Halo. Saya **Metrologi Pro**.\n\nSaya siap membantu analisis teknis dan regulasi.", timestamp: new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) }]);
-                    else setMessages(msgs);
-                }
-            }, [activeId]);
+                return (
+                    <div className="prose prose-invert">
+                        {blocks.map((block, idx) => {
+                            if (block.type === 'text') {
+                                return <div key={idx} dangerouslySetInnerHTML={{ __html: marked.parse(block.content) }} />;
+                            }
 
-            useEffect(() => {
-                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-                if (window.MathJax) window.MathJax.typesetPromise && window.MathJax.typesetPromise();
-            }, [messages, isLoading]);
+                            // block.type === 'code'
+                            // check for multi-file separators
+                            const multi = splitMultiFile(block.content);
+                            if (multi.length > 1) {
+                                return (
+                                    <div key={idx}>
+                                        {multi.map((m, j) => (
+                                            <div key={j} className="code-canvas">
+                                                <div className="code-canvas-header">
+                                                    <span className="code-canvas-filename">{m.filename || block.lang}</span>
+                                                    <button onClick={() => onCopy(m.content, m.filename || block.lang)} className="code-canvas-copy"><i className="fa-solid fa-copy"></i> Salin</button>
+                                                </div>
+                                                <div className="code-canvas-content"><pre><code className={`language-${block.lang}`}>{m.content}</code></pre></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            }
 
-            const createNewSession = (isAuto = false) => {
-                if (!user) return;
-                const newSession = db.createSession(user.id);
-                setSessions(prev => [newSession, ...prev]);
-                setActiveId(newSession.id);
-                if(!isAuto) setSidebarOpen(false);
+                            // single code block
+                            return (
+                                <div key={idx} className="code-canvas">
+                                    <div className="code-canvas-header">
+                                        <span className="code-canvas-filename">{block.lang}</span>
+                                        <button onClick={() => onCopy(block.content, block.lang)} className="code-canvas-copy"><i className="fa-solid fa-copy"></i> Salin</button>
+                                    </div>
+                                    <div className="code-canvas-content"><pre><code className={`language-${block.lang}`}>{block.content}</code></pre></div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
             };
 
-            const deleteSession = (id) => {
-                db.deleteSession(id);
-                const remain = sessions.filter(s => s.id !== id);
-                setSessions(remain);
-                if (remain.length === 0) createNewSession(true);
-                else if (activeId === id) setActiveId(remain[0].id);
+            const toggleMic = () => {
+                if (isListening) return; 
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) { alert("Browser tidak support Voice."); return; }
+                const rec = new SpeechRecognition();
+                rec.lang = 'id-ID';
+                rec.onstart = () => setIsListening(true);
+                rec.onend = () => setIsListening(false);
+                rec.onresult = (e) => setInput(prev => prev + " " + e.results[0][0].transcript);
+                rec.start();
             };
 
-            const handleFile = (e, type) => {
+            const handleFile = async (e) => {
                 const f = e.target.files[0];
-                if(f) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        setAttachments([...attachments, { name: f.name, type, preview: type === 'image' ? ev.target.result : null, file: f }]);
-                        setMenuOpen(false);
-                    };
-                    reader.readAsDataURL(f);
-                }
+                if (!f) return;
+                const ext = f.name.split('.').pop().toLowerCase();
+                let type = 'unknown'; let preview = null;
+                if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
+                    type = 'image';
+                    preview = await new Promise(r => { const rd = new FileReader(); rd.onload=ev=>r(ev.target.result); rd.readAsDataURL(f); });
+                } else if (['xlsx', 'xls', 'csv'].includes(ext)) type = 'excel';
+                else if (ext === 'pdf') type = 'pdf';
+                setAttachments(prev => [...prev, { name: f.name, type, preview, file: f }]);
                 e.target.value = null;
+                setShowAttachMenu(false);
             };
 
-            const fileToBase64 = (file) => new Promise((resolve, reject) => {
+            const processExcel = (file) => new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
+                reader.onload = (e) => {
+                    try {
+                        const wb = XLSX.read(e.target.result, {type: 'binary'});
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(ws, {header: 1});
+                        const previewData = json.slice(0, 20);
+                        
+                        // Deteksi anomali
+                        let anomalies = [];
+                        if (json.length < 2) anomalies.push("Data terlalu sedikit (hanya header)");
+                        
+                        // Cek kolom kosong
+                        const emptyColumns = [];
+                        if (previewData.length > 0) {
+                            previewData[0].forEach((col, idx) => {
+                                if (!col || col === '' || col === null) emptyColumns.push(`Kolom ${idx+1}`);
+                            });
+                            if (emptyColumns.length > 0) anomalies.push(`Kolom kosong: ${emptyColumns.join(', ')}`);
+                        }
+                        
+                        // Cek duplikat
+                        const firstCol = previewData.slice(1).map(r => r[0]);
+                        const duplicates = firstCol.filter((item, idx) => firstCol.indexOf(item) !== idx);
+                        if (duplicates.length > 0) anomalies.push(`Ditemukan ${duplicates.length} duplikat data`);
+                        
+                        // Cek tipe data inconsistent
+                        const numColumns = previewData[0]?.length || 0;
+                        let inconsistencies = 0;
+                        for (let i = 1; i < previewData.length; i++) {
+                            if (previewData[i].length !== numColumns) inconsistencies++;
+                        }
+                        if (inconsistencies > 0) anomalies.push(`${inconsistencies} baris dengan jumlah kolom tidak sesuai`);
+                        
+                        let md = "**Data Preview:**\n| " + previewData[0].join(" | ") + " |\n| " + previewData[0].map(()=>"---").join(" | ") + " |\n";
+                        previewData.slice(1).forEach(r => md += "| " + r.join(" | ") + " |\n");
+                        
+                        if (anomalies.length > 0) {
+                            md = "⚠️ **Anomali Terdeteksi:**\n" + anomalies.map(a => `- ${a}`).join("\n") + "\n\n" + md;
+                        }
+                        
+                        resolve(`[📊 EXCEL: ${file.name}]\n${md}`);
+                    } catch (err) { resolve(`[❌ Error membaca Excel: ${err.message}]`); }
+                };
+                reader.readAsBinaryString(file);
             });
 
-            const extractTextFromPDF = async (file) => {
+            const cancelGen = () => {
+                if (abortRef.current) {
+                    abortRef.current.abort();
+                    abortRef.current = null;
+                    setIsLoading(false);
+                    setMessages(prev => [...prev, { id: Date.now(), role: 'ai', text: "*[Proses dibatalkan oleh pengguna]*" }]);
+                }
+            };
+
+            const copyCode = async (code, filename) => {
                 try {
-                    const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-                    let fullText = "";
-                    for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
-                        const page = await pdf.getPage(i);
-                        const txt = await page.getTextContent();
-                        fullText += `[Hal ${i}]: ${txt.items.map(s => s.str).join(" ")}\n`;
-                    }
-                    return fullText;
-                } catch (e) { return "Error baca PDF."; }
+                    await navigator.clipboard.writeText(code);
+                    setNotification({ type: 'info', msg: `Code ${filename} disalin` });
+                    setTimeout(() => setNotification(null), 1600);
+                } catch (e) {
+                    setNotification({ type: 'error', msg: 'Gagal menyalin code' });
+                    setTimeout(() => setNotification(null), 1600);
+                }
+            };
+
+            const copyMessage = async (text) => {
+                try {
+                    await navigator.clipboard.writeText(text || '');
+                    setNotification({ type: 'info', msg: 'Teks disalin' });
+                    setTimeout(() => setNotification(null), 1600);
+                } catch (e) {
+                    setNotification({ type: 'error', msg: 'Gagal menyalin' });
+                    setTimeout(() => setNotification(null), 1600);
+                }
+            };
+
+            const exportChat = () => {
+                const chatText = messages.map(m => `[${m.role.toUpperCase()}]\n${m.text}`).join('\n\n---\n\n');
+                const blob = new Blob([chatText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `chat-${new Date().toISOString().slice(0,10)}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                setNotification({ type: 'info', msg: 'Chat diekspor' });
+                setTimeout(() => setNotification(null), 1600);
+            };
+
+            const summarizeChat = () => {
+                const summaryPrompt = `Buatkan ringkasan singkat (3-5 poin) dari percakapan berikut:\n\n${messages.map(m => `${m.role}: ${m.text.substring(0, 100)}`).join('\n\n')}`;
+                setInput(summaryPrompt);
+            };
+
+            const createNewSession = () => {
+                if (user.role === 'guest') { setModals({...modals, auth: true}); return; }
+                setNewChatPulse(true);
+                const sessionId = Math.random().toString(36).substr(2, 9);
+                db.createSession(user.id, sessionId, "Chat Baru");
+                setActiveId(sessionId);
+                setSessions(prev => [...prev, {id: sessionId, title: "Chat Baru"}]);
+                setMessages([]);
+                setNewChatPulse(false);
+            };
+
+            const handleDeleteSession = (sessionId) => {
+                setConfirmDialog({
+                    title: 'Hapus Chat?',
+                    message: 'Percakapan ini akan dihapus secara permanen',
+                    onConfirm: () => {
+                        setDeletingSessionId(sessionId);
+                        setTimeout(() => {
+                            db.deleteSession(sessionId);
+                            const filteredSessions = sessions.filter(s => s.id !== sessionId);
+                            setSessions(filteredSessions);
+                            if (activeId === sessionId) {
+                                if (filteredSessions.length > 0) {
+                                    const nextSession = filteredSessions[filteredSessions.length - 1];
+                                    setActiveId(nextSession.id);
+                                    const msgs = db.getMessages(nextSession.id);
+                                    setMessages(msgs);
+                                } else {
+                                    setActiveId(null);
+                                    setMessages([]);
+                                }
+                            }
+                            setDeletingSessionId(null);
+                            setNotification({type: 'delete', msg: 'Chat dihapus'});
+                            setTimeout(() => setNotification(null), 1600);
+                        }, 150);
+                    },
+                    onCancel: () => setConfirmDialog(null)
+                });
+            };
+
+            const handleLogout = () => {
+                setConfirmDialog({
+                    title: 'Logout?',
+                    message: 'Apakah Anda yakin ingin keluar?',
+                    onConfirm: () => {
+                        setUser({ id: db.getGuestId(), username: 'Tamu', role: 'guest' });
+                        setSessions([]);
+                        setMessages([]);
+                        setActiveId(null);
+                        setModals({auth: false, settings: false});
+                        setNotification({type: 'info', msg: 'Logout berhasil'});
+                        setTimeout(() => setNotification(null), 1600);
+                        setConfirmDialog(null);
+                    },
+                    onCancel: () => setConfirmDialog(null)
+                });
             };
 
             const handleSend = async (e) => {
                 e.preventDefault();
-                if ((!input.trim() && attachments.length === 0) || isLoading || !user) return;
-                
+                if ((!input.trim() && !attachments.length) || isLoading) return;
+
                 const txt = input;
                 const atts = [...attachments];
                 setInput(""); setAttachments([]); setIsLoading(true);
+                setShowAttachMenu(false);
 
-                if (messages.filter(m => m.id !== 'init').length === 0) {
-                    const newTitle = txt ? (txt.slice(0, 20) + (txt.length>20?'...':'')) : 'Lampiran File';
-                    db.updateSessionTitle(activeId, newTitle);
-                    setSessions(prev => prev.map(s => s.id === activeId ? {...s, title: newTitle} : s));
+                const newMsgUser = { id: Date.now(), role: 'user', text: txt, attachments: atts };
+                if (user.role !== 'guest') db.saveMessage(activeId, 'user', txt, atts); 
+                setMessages(prev => [...prev, newMsgUser]);
+                // Always scroll to show the new user message
+                scrollToBottom(true);
+
+                if (user.role !== 'guest' && messages.length === 0) {
+                    const t = txt.substring(0, 40) || "Chat Baru";
+                    db.updateSessionTitle(activeId, t);
+                    setSessions(prev => prev.map(s => s.id === activeId ? {...s, title: t} : s));
                 }
-                setMessages(prev => [...prev, db.saveMessage(activeId, 'user', txt, atts)]);
 
-                let apiParts = [];
-                let context = txt;
-                const history = messages.filter(m => m.id !== 'init').slice(-5).map(m => ({ role: m.role==='ai'?'model':'user', parts: [{ text: m.text }] }));
-                
+                abortRef.current = new AbortController();
+
                 try {
-                    if (atts.length > 0) {
-                        context += `\n[Lampiran User]:\n`;
-                        for (const att of atts) {
-                            if (att.type === 'image') {
-                                apiParts.push({ inlineData: { mimeType: att.file.type, data: await fileToBase64(att.file) } });
-                                context += `- Gambar: ${att.name}\n`;
-                            } else if (att.type === 'pdf') {
-                                context += `- PDF (${att.name}):\n${await extractTextFromPDF(att.file)}\n`;
-                            }
+                    let ctx = txt;
+                    let parts = [];
+                    for (const a of atts) {
+                        if (a.type === 'excel') ctx += "\n\n" + await processExcel(a.file);
+                        else if (a.type === 'image') {
+                            const b64 = await new Promise(r => { const rd = new FileReader(); rd.onload=()=>r(rd.result.split(',')[1]); rd.readAsDataURL(a.file); });
+                            parts.push({ inlineData: { mimeType: a.file.type, data: b64 } });
+                            ctx += `\n[Analisis gambar: ${a.name}]`;
                         }
                     }
-                    apiParts.push({ text: context });
-                    
-                    const safeKey = getKey(); 
 
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${safeKey}`, {
+                    const sysPrompt = `Anda adalah asisten AI profesional dan helpful seperti ChatGPT.
+
+INSTRUKSI UTAMA:
+1. Jawab dengan natural, profesional, dan terstruktur
+2. Gunakan Markdown formatting: lists, bold, tables untuk organize jawaban
+3. Jika user minta ide/konsep: berikan ide lengkap dengan penjelasan step-by-step
+4. Jika ada search/research: cantumkan referensi dan sumber di akhir jawaban
+5. Untuk math: breakdown rumus step-by-step dengan penjelasan jelas
+6. Jawab singkat tapi lengkap - hindari penjelasan berlebihan
+
+TONE: ${aiTone === 'casual' ? 'Santai, informal, approachable' : aiTone === 'technical' ? 'Teknis, detail-oriented, mendalam' : aiTone === 'academic' ? 'Akademis, formal, evidence-based' : 'Profesional, terstruktur, business-like'}
+
+RESPON FORMAT:
+- Jawab langsung ke pertanyaan
+- Gunakan struktur jika diperlukan (steps, sections)
+- SELALU berikan referensi/sumber jika melakukan research atau mencari informasi
+- Format referensi: "## Referensi" atau "**Sumber:**" dengan URL
+- Jika ada multiple sources, tampilkan dalam list
+
+Hindari: penjelasan berbelit-belit, format code kecuali diminta
+
+PENTING: Setiap jawaban yang melibatkan research HARUS disertai referensi/sumber!`;
+                    parts.push({ text: sysPrompt + "\n\n" + ctx });
+
+                    const history = messages.filter(m => m.id !== 'init').slice(-4).map(m => ({ role: m.role==='ai'?'model':'user', parts: [{ text: m.text }] }));
+
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${getKey()}`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ contents: [...history, { role: 'user', parts: apiParts }], tools: [{ google_search: {} }] })
+                        body: JSON.stringify({ 
+                            contents: [...history, { role: 'user', parts }],
+                            tools: [{ google_search: {} }] 
+                        }),
+                        signal: abortRef.current.signal
                     });
                     
-                    const data = await res.json();
+                    const d = await res.json();
+                    const ans = d.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak dapat memproses.";
                     
-                    if (data.error) {
-                         throw new Error(`API Error: ${data.error.message}`);
+                    let sources = [];
+                    const grounding = d.candidates?.[0]?.groundingMetadata;
+                    if (grounding?.groundingChunks) {
+                         sources = grounding.groundingChunks.map(c => ({ title: c.web?.title, uri: c.web?.uri })).filter(s => s.uri && s.title);
+                         sources = [...new Map(sources.map(item => [item['uri'], item])).values()];
                     }
 
-                    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, tidak ada respon.";
-                    const sources = data.candidates?.[0]?.groundingMetadata?.groundingChunks?.filter(c=>c.web?.uri).map(c=>({title:c.web?.title, uri:c.web?.uri})) || [];
-                    
-                    setMessages(prev => [...prev, db.saveMessage(activeId, 'ai', aiText, [], [...new Map(sources.map(s => [s.uri, s])).values()])]);
+                    const newMsgAi = { id: Date.now()+1, role: 'ai', text: ans, sources };
+                    if (user.role !== 'guest') db.saveMessage(activeId, 'ai', ans, [], sources);
+                    setMessages(prev => [...prev, newMsgAi]);
+                    // Auto-scroll to AI reply only if user hasn't manually scrolled up
+                    if (!userScrolledUpRef.current) scrollToBottom(true);
 
-                } catch (err) {
-                    setMessages(prev => [...prev, { id: 'err', role: 'ai', text: `Error: ${err.message}. \n\n*Kemungkinan API Key telah diblokir atau limit habis.*`, isError: true }]);
-                } finally { setIsLoading(false); }
+                } catch (e) {
+                    if (e.name !== 'AbortError') setMessages(prev => [...prev, { id: Date.now(), role: 'ai', text: "Gagal terhubung ke server." }]);
+                } finally { setIsLoading(false); abortRef.current = null; }
             };
 
-            const renderMarkdown = (txt) => ({ __html: marked.parse(txt) });
-
             return (
-                <div className="flex h-full w-full relative overflow-hidden">
-                    <AuthModal isOpen={!user} onLogin={setUser} />
-                    <DbViewer isOpen={showDb} onClose={() => setShowDb(false)} />
-
-                    {/* SIDEBAR */}
-                    <div className={`fixed inset-y-0 left-0 z-[60] w-72 bg-[var(--bg-sidebar)] border-r border-white/5 flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                        <div className="h-16 flex items-center px-5 border-b border-white/5 safe-top">
-                            <i className="fa-solid fa-cube text-blue-500 mr-3"></i>
-                            <div><h1 className="font-bold text-sm text-white">Metrologi Pro</h1><span className="text-[10px] text-gray-500">Version 1.0</span></div>
-                            <button onClick={() => setSidebarOpen(false)} className="md:hidden ml-auto text-gray-500"><i className="fa-solid fa-xmark"></i></button>
+                <div className="flex h-full w-full relative bg-[var(--bg-main)]">
+                    {modals.auth && <AuthForm onClose={() => setModals({...modals, auth: false})} onLogin={setUser} />}
+                    {modals.settings && <SettingsModal isOpen={modals.settings} onClose={() => setModals({...modals, settings: false})} theme={theme} setTheme={setTheme} user={user} onLogout={handleLogout} myPets={myPets} setMyPets={setMyPets} exportChat={exportChat} summarizeChat={summarizeChat} aiTone={aiTone} setAiTone={setAiTone} />}
+                    
+                    {confirmDialog && <ConfirmDialog data={confirmDialog} onConfirm={confirmDialog.onConfirm} onCancel={confirmDialog.onCancel} />}
+                    
+                    {notification && (
+                        <div className="fixed top-4 right-4 z-[200] notification-enter">
+                            <div className={`px-4 py-3 rounded-lg font-medium text-sm flex items-center gap-2 shadow-lg backdrop-blur-md border ${
+                                notification.type === 'delete' 
+                                    ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                                    : 'bg-green-500/10 text-green-400 border-green-500/20'
+                            }`}>
+                                {notification.type === 'delete' ? <i className="fa-solid fa-trash"></i> : <i className="fa-solid fa-check-circle"></i>}
+                                {notification.msg}
+                            </div>
                         </div>
-                        <div className="p-4"><button onClick={() => createNewSession(false)} className="w-full bg-[#1c1c1f] hover:bg-[#27272a] border border-white/5 text-white py-2.5 rounded-xl text-sm font-medium"><i className="fa-solid fa-plus text-blue-500 mr-2"></i>Chat Baru</button></div>
-                        <div className="flex-1 overflow-y-auto px-2 space-y-1 scroller"><p className="px-3 text-[10px] font-bold text-gray-600 uppercase mb-2">Riwayat</p>{sessions.map(s => <SidebarItem key={s.id} session={s} active={activeId === s.id} onClick={() => {setActiveId(s.id); setSidebarOpen(false);}} onDelete={() => deleteSession(s.id)} />)}</div>
-                        
-                        <div className="p-4 border-t border-white/5 bg-black/20 safe-bottom">
-                            {user && (
-                                <div className="flex flex-col gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-900/20 text-white">
-                                            {user.username.substring(0,2).toUpperCase()}
+                    )}
+                    
+                    {previewImg && (
+                        <div className="fixed inset-0 z-[150] bg-black/95 flex items-center justify-center p-4 animate-[fadeIn_0.2s]" onClick={() => setPreviewImg(null)}>
+                            <img src={previewImg} className="max-h-[85vh] max-w-full rounded shadow-2xl" onClick={e => e.stopPropagation()} />
+                            <button className="absolute top-4 right-4 text-white text-2xl p-2 opacity-70 hover:opacity-100"><i className="fa-solid fa-xmark"></i></button>
+                        </div>
+                    )}
+
+                    {/* SIDEBAR (Collapsible) */}
+                    <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-[var(--bg-sec)] border-r border-[var(--border)] flex flex-col transition-transform duration-300 shadow-2xl ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <div className="h-16 flex items-center px-6 border-b border-[var(--border)] bg-[var(--bg-sec)] justify-between">
+                            <div className="flex items-center">
+                                <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center text-white mr-3 shadow-lg shadow-blue-500/30"><i className="fa-solid fa-brain text-sm"></i></div>
+                                <h1 className="font-bold tracking-tight text-sm">Than AI</h1>
+                            </div>
+                            <button onClick={() => setSidebarOpen(false)} className="md:hidden text-[var(--text-sec)]"><i className="fa-solid fa-xmark"></i></button>
+                        </div>
+
+                        {user.role !== 'guest' ? (
+                            <>
+                                <div className="p-4 border-b border-[var(--border)] mb-2">
+                                    <button onClick={createNewSession} className={`w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 animate-scaleIn ${newChatPulse ? 'btn-pulse' : ''}`}>
+                                        <i className="fa-solid fa-plus"></i> Chat Baru
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto px-3 py-2 scroller">
+                                    <p className="px-3 text-[10px] font-bold uppercase text-[var(--text-sec)] mb-2">Riwayat</p>
+                                    {sessions.map((s, i) => (
+                                        <div key={s.id} onClick={() => { setActiveId(s.id); if(window.innerWidth < 768) setSidebarOpen(false); }} className={`group mb-1 px-3 py-2.5 rounded-lg text-xs font-medium cursor-pointer flex items-center gap-3 transition-all ${deletingSessionId === s.id ? 'animate-fadeOutDown' : 'animate-fadeInUp'} ${activeId === s.id ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'text-[var(--text-sec)] hover:bg-white/5 border border-transparent'}`} style={{animationDelay: `${i * 0.05}s`}}>
+                                            <i className="fa-regular fa-message opacity-70"></i>
+                                            <span className="truncate flex-1">{s.title}</span>
+                                            <button onClick={(e) => { e.stopPropagation(); handleDeleteSession(s.id); }} className="opacity-0 group-hover:opacity-100 hover:text-red-400 p-1"><i className="fa-solid fa-trash"></i></button>
                                         </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-bold text-white truncate">{user.username}</p>
-                                            <p className="text-[10px] text-gray-400 font-mono truncate">ID: {user.id}</p>
-                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center opacity-60">
+                                <div className="w-12 h-12 rounded-full bg-[var(--border)] flex items-center justify-center mb-3 text-[var(--text-sec)]"><i className="fa-solid fa-lock text-xl"></i></div>
+                                <p className="text-sm font-medium">Mode Tamu</p>
+                                <p className="text-[10px] text-[var(--text-sec)] mt-1 px-4">Fitur riwayat dinonaktifkan.</p>
+                            </div>
+                        )}
+
+                        <div className="p-4 border-t border-[var(--border)] bg-[var(--bg-main)]">
+                            {user.role === 'guest' ? (
+                                <button onClick={() => setModals({...modals, auth: true})} className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-[var(--border)] rounded-lg text-xs font-bold transition-all text-blue-400">
+                                    <i className="fa-solid fa-right-to-bracket mr-2"></i> Login Member
+                                </button>
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-lg">
+                                        {user.username.substring(0,2).toUpperCase()}
                                     </div>
-                                    <button onClick={() => setShowDb(true)} className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 border border-white/5 text-gray-300 text-xs font-semibold py-2.5 rounded-lg transition-all">
-                                        <i className="fa-solid fa-database"></i> Admin Data
-                                    </button>
-                                    <button onClick={() => setUser(null)} className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-semibold py-2.5 rounded-lg transition-all">
-                                        <i className="fa-solid fa-right-from-bracket"></i> Keluar
-                                    </button>
+                                    <div className="flex-1 overflow-hidden">
+                                        <p className="font-bold text-xs truncate">{user.username}</p>
+                                        <p className="text-[9px] text-green-500 flex items-center gap-1"><span className="w-1 h-1 rounded-full bg-green-500"></span> Online</p>
+                                    </div>
+                                    <button onClick={() => setModals({...modals, settings: true})} className="p-1.5 hover:bg-white/10 rounded transition-colors text-[var(--text-sec)]"><i className="fa-solid fa-gear"></i></button>
                                 </div>
                             )}
                         </div>
                     </div>
-                    {sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/60 z-50 md:hidden"></div>}
+                    {sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"></div>}
 
-                    {/* MAIN AREA */}
-                    <div className="flex-1 flex flex-col h-full bg-[#09090b] relative w-full overflow-hidden">
-                        <div className="md:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-[#09090b] z-40 safe-top">
-                            <span className="font-bold text-white text-sm">Metrologi Pro</span>
-                            <button onClick={() => setSidebarOpen(true)} className="text-gray-300"><i className="fa-solid fa-bars"></i></button>
+                    {/* MAIN CHAT */}
+                    <div className={`flex-1 flex flex-col relative bg-[var(--bg-main)] min-h-0 transition-all duration-300 ${sidebarOpen ? 'md:ml-72' : ''}`}>
+                        <div className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-[var(--border)] backdrop-blur-md sticky top-0 z-30 bg-[var(--bg-main)]/90">
+                            <div className="flex items-center gap-3">
+                                {/* BURGER BAR TOGGLE (Visible on Desktop too) */}
+                                <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-white/5 text-[var(--text-sec)] transition-colors"><i className="fa-solid fa-bars text-lg"></i></button>
+                                <div>
+                                    <h2 className="font-bold text-sm flex items-center gap-2">
+                                        {user.role === 'guest' ? "Guest Mode" : (sessions.find(s=>s.id===activeId)?.title || "Than AI Assistant")}
+                                    </h2>
+                                    {isLoading && <p className="text-[10px] text-blue-400 font-mono loading-dots">Processing</p>}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {messages.length > 0 && (
+                                    <button onClick={() => { if(window.confirm('Hapus semua chat di session ini?')) { setMessages([]); if(user.role !== 'guest') db.deleteSession(activeId); } }} className="p-2 hover:bg-white/5 rounded-lg text-[var(--text-sec)] hover:text-red-400 transition-colors" title="Clear chat">
+                                        <i className="fa-solid fa-trash text-sm"></i>
+                                    </button>
+                                )}
+                                <button onClick={() => setModals({...modals, settings: true})} className="p-2 hover:bg-white/5 rounded-lg text-[var(--text-sec)] transition-colors"><i className="fa-solid fa-gear text-sm"></i></button>
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-8 scroller w-full">
-                            {messages.map((msg) => (
-                                <div key={msg.id} className={`msg-enter flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    {msg.role === 'ai' && <div className="w-8 h-8 rounded-lg bg-[#1c1c1f] border border-white/10 flex items-center justify-center flex-shrink-0 mt-1"><i className="fa-solid fa-robot text-blue-400 text-xs"></i></div>}
-                                    <div className={`flex flex-col gap-1 max-w-[90%] md:max-w-[80%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                        <div className="px-1"><span className="text-[10px] text-gray-500 font-mono uppercase opacity-70">{msg.role === 'user' ? user?.username : 'AI'} • {msg.timestamp}</span></div>
-                                        {msg.attachments && msg.attachments.length > 0 && <div className="flex flex-wrap gap-2 justify-end mb-1">{msg.attachments.map((att, i) => (<div key={i} className="bg-[#1c1c1f] border border-white/10 rounded px-2 py-1 text-xs text-gray-300 flex items-center gap-2"><i className={`fa-solid ${att.type==='image'?'fa-image text-blue-400':'fa-file-pdf text-red-400'}`}></i>{att.name}</div>))}</div>}
-                                        <div className={`p-5 rounded-2xl text-[0.95rem] shadow-sm border ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none border-blue-500 user-content' : 'bg-[#18181b] text-gray-200 rounded-tl-none border-white/5'}`}>
-                                            <div className="prose prose-invert" dangerouslySetInnerHTML={renderMarkdown(msg.text)}></div>
-                                            {msg.sources && msg.sources.length > 0 && <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-2"><div className="w-full text-[10px] font-bold text-gray-500 uppercase">Referensi:</div>{msg.sources.map((src, i) => (<a key={i} href={src.uri} target="_blank" className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/30 hover:bg-black/50 rounded-lg border border-white/10 text-[11px] text-blue-300 hover:text-blue-200 transition-all"><i className="fa-solid fa-link text-[10px]"></i> {src.title}</a>))}</div>}
-                                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroller min-h-0">
+                            {messages.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center animate-fadeInUp">
+                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mb-4 shadow-lg animate-scaleIn">
+                                        <i className="fa-solid fa-sparkles text-white text-2xl"></i>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">Halo! Saya Than AI</h3>
+                                    <p className="text-sm text-[var(--text-sec)] mb-6 max-w-sm">Siap membantu dengan ide, analisis, coding, research, dan banyak lagi</p>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl w-full">
+                                        <button onClick={() => setInput('Berikan 5 ide bisnis online yang profitable')} className="p-4 rounded-xl border border-[var(--border)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-left group animate-fadeInUp" style={{animationDelay: '0.1s'}}>
+                                            <div className="flex items-start gap-2">
+                                                <i className="fa-solid fa-lightbulb text-blue-400 text-lg mt-0.5"></i>
+                                                <div>
+                                                    <p className="font-semibold text-sm text-[var(--text-main)] group-hover:text-blue-400">Ide Bisnis</p>
+                                                    <p className="text-xs text-[var(--text-sec)] mt-1">Temukan peluang bisnis baru</p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                        
+                                        <button onClick={() => setInput('Jelaskan konsep machine learning untuk pemula')} className="p-4 rounded-xl border border-[var(--border)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-left group animate-fadeInUp" style={{animationDelay: '0.15s'}}>
+
+                                            <div className="flex items-start gap-2">
+                                                <i className="fa-solid fa-brain text-purple-400 text-lg mt-0.5"></i>
+                                                <div>
+                                                    <p className="font-semibold text-sm text-[var(--text-main)] group-hover:text-blue-400">Pelajaran</p>
+                                                    <p className="text-xs text-[var(--text-sec)] mt-1">Pelajari konsep baru dengan mudah</p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                        
+                                        <button onClick={() => setInput('Buat template CV profesional untuk tech industry')} className="p-4 rounded-xl border border-[var(--border)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-left group animate-fadeInUp" style={{animationDelay: '0.2s'}}>
+                                            <div className="flex items-start gap-2">
+                                                <i className="fa-solid fa-file-lines text-green-400 text-lg mt-0.5"></i>
+                                                <div>
+                                                    <p className="font-semibold text-sm text-[var(--text-main)] group-hover:text-blue-400">Template</p>
+                                                    <p className="text-xs text-[var(--text-sec)] mt-1">Dapatkan template siap pakai</p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                        
+                                        <button onClick={() => setInput('Apa tips produktivitas yang paling efektif?')} className="p-4 rounded-xl border border-[var(--border)] hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-left group animate-fadeInUp" style={{animationDelay: '0.25s'}}>
+                                            <div className="flex items-start gap-2">
+                                                <i className="fa-solid fa-rocket text-orange-400 text-lg mt-0.5"></i>
+                                                <div>
+                                                    <p className="font-semibold text-sm text-[var(--text-main)] group-hover:text-blue-400">Tips</p>
+                                                    <p className="text-xs text-[var(--text-sec)] mt-1">Tingkatkan efisiensi kerja</p>
+                                                </div>
+                                            </div>
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
-                            {isLoading && <div className="flex gap-4 max-w-4xl mx-auto"><div className="w-8 h-8 rounded-lg bg-transparent flex items-center justify-center mt-1"><i className="fa-solid fa-robot text-gray-600 text-xs"></i></div><div className="px-5 py-4 bg-[#18181b] border border-white/5 rounded-2xl rounded-tl-none flex gap-1.5"><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div><div className="w-1.5 h-1.5 bg-blue-500 rounded-full typing-dot"></div></div></div>}
+                            ) : (
+                                messages.map((msg, i) => (
+                                    <div key={msg.id} className={`flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end message-user' : 'message-ai'} ${msg.role === 'user' ? 'animate-slideInRight' : 'animate-slideInLeft'}`}>
+                                        {msg.role === 'ai' && <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-600 to-indigo-600 flex-shrink-0 shadow flex items-center justify-center text-white text-xs mt-0.5"><i className="fa-solid fa-robot"></i></div>}
+                                        
+                                        <div className={`flex flex-col gap-3 max-w-[90%] md:max-w-[80%] ${msg.role === 'user' ? 'items-end' : 'items-start'} w-full`}>
+                                            
+                                            {msg.attachments && msg.attachments.length > 0 && (
+                                                <div className="flex flex-wrap gap-2 justify-end w-full">
+                                                    {msg.attachments.map((a, i) => (
+                                                        <div key={i} onClick={() => a.type === 'image' && a.preview && setPreviewImg(a.preview)} className={`bg-[var(--bg-sec)] px-2 py-1.5 rounded text-[10px] flex items-center gap-2 ${a.type==='image'?'cursor-pointer':''}`}>
+                                                            {a.type === 'image' ? <img src={a.preview} className="w-4 h-4 rounded object-cover" /> : <i className="fa-solid fa-file text-gray-500"></i>}
+                                                            <span className="font-bold truncate max-w-[120px]">{a.name}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className={`px-5 py-4 rounded-2xl text-[0.95rem] shadow-sm leading-relaxed ${
+                                                msg.role === 'user' 
+                                                ? 'bg-blue-600 text-white rounded-tr-none' 
+                                                : 'glass-panel rounded-tl-none text-[var(--text-main)]'
+                                            }`}>
+                                                {msg.role === 'ai' ? (
+                                                    <CodeRenderer text={msg.text} onCopy={copyCode} />
+                                                ) : (
+                                                    <div className="prose prose-invert" dangerouslySetInnerHTML={{ __html: marked.parse(msg.text) }}></div>
+                                                )}
+                                            </div>
+                                            
+                                            {msg.role === 'ai' && (
+                                                <div className="flex flex-wrap gap-2 items-center">
+                                                    <button onClick={() => copyMessage(msg.text)} className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 active:bg-blue-600/60 border border-blue-500/30 rounded-lg transition-all text-blue-400 hover:text-blue-300 flex items-center gap-1.5 text-xs font-semibold" title="Salin jawaban">
+                                                        <i className="fa-solid fa-copy"></i>
+                                                        <span>Salin</span>
+                                                    </button>
+                                                    <button onClick={() => { 
+                                                        setIsLoading(true);
+                                                        abortRef.current = new AbortController();
+                                                        const lastUserMsg = [...messages].filter(m => m.role === 'user').pop();
+                                                        if(lastUserMsg) {
+                                                            setMessages(prev => prev.filter(m => m.id !== msg.id));
+                                                            callAi(lastUserMsg.text, lastUserMsg.attachments || []);
+                                                        }
+                                                    }} className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 active:bg-indigo-600/60 border border-indigo-500/30 rounded-lg transition-all text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 text-xs font-semibold" title="Regenerate response">
+                                                        <i className="fa-solid fa-rotate-right"></i>
+                                                        <span>Ulang</span>
+                                                    </button>
+                                                </div>
+                                            )}
+                                            
+                                            {msg.sources && msg.sources.length > 0 && msg.id !== 'init' && (
+                                                <div className="w-full mt-2">
+                                                    <div className="bg-gradient-to-r from-blue-600/5 via-blue-600/3 to-transparent pl-4 rounded-r-lg p-4 backdrop-blur-sm">
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                                                <i className="fa-solid fa-link text-xs text-blue-400"></i>
+                                                            </div>
+                                                            <h4 className="text-sm font-bold text-blue-300 uppercase tracking-wide">Referensi Sumber</h4>
+                                                            <span className="ml-auto text-xs text-blue-400/60 font-medium">{msg.sources.length} sumber</span>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            {msg.sources.map((src, i) => (
+                                                                <a key={i} href={src.uri} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-blue-500/6 transition-all duration-200">
+                                                                    <div className="pt-0.5 text-blue-400/70 group-hover:text-blue-300 transition-colors flex-shrink-0">
+                                                                        <i className="fa-solid fa-globe text-sm"></i>
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-xs font-semibold text-blue-300 group-hover:text-blue-200 transition-colors line-clamp-2 break-words">{src.title || 'Sumber'}</p>
+                                                                        <p className="text-[10px] text-blue-400/50 group-hover:text-blue-400/70 transition-colors mt-1 truncate">{src.uri}</p>
+                                                                    </div>
+                                                                    <div className="text-blue-400/40 group-hover:text-blue-400 transition-colors flex-shrink-0 text-xs">
+                                                                        <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                                                                    </div>
+                                                                </a>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                             <div ref={bottomRef} className="h-2"></div>
                         </div>
 
-                        <div className="flex-shrink-0 z-30 bg-[#09090b] border-t border-white/5 p-3 md:p-5 safe-bottom">
-                            <div className="max-w-4xl mx-auto relative glass-popover rounded-xl p-1.5 transition-all shadow-2xl bg-[#18181b]">
-                                {menuOpen && <div className="absolute bottom-full left-0 mb-2 bg-[#1c1c1f] border border-white/10 rounded-xl shadow-xl overflow-hidden min-w-[200px] z-50 flex flex-col msg-enter">
-                                    <button onClick={() => fileRef.current.click()} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left"><i className="fa-solid fa-image text-blue-400 w-5"></i><span className="text-sm text-gray-200">Upload Gambar</span></button>
-                                    <button onClick={() => pdfRef.current.click()} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left border-t border-white/5"><i className="fa-solid fa-file-pdf text-red-400 w-5"></i><span className="text-sm text-gray-200">Upload PDF</span></button>
-                                </div>}
-                                <input type="file" ref={fileRef} onChange={(e) => handleFile(e, 'image')} className="hidden" accept="image/*" />
-                                <input type="file" ref={pdfRef} onChange={(e) => handleFile(e, 'pdf')} className="hidden" accept=".pdf" />
-                                
-                                {attachments.length > 0 && <div className="flex gap-2 p-2 border-b border-white/5 overflow-x-auto mb-1">{attachments.map((att, i) => (<div key={i} className="relative bg-black/40 rounded px-2 py-1 text-xs text-gray-300 flex items-center gap-2 border border-white/10"><i className={`fa-solid ${att.type==='image'?'fa-image':'fa-file-pdf'}`}></i>{att.name}<button onClick={() => setAttachments(attachments.filter((_, idx) => idx!==i))} className="ml-2 hover:text-red-400"><i className="fa-solid fa-times"></i></button></div>))}</div>}
+                        <div className="p-4 bg-gradient-to-t from-[var(--bg-main)] via-[var(--bg-main)] to-transparent z-40">
+                            <div className="max-w-4xl mx-auto mb-1">
+                                <PixelPets types={myPets} />
+                            </div>
+                            
+                            <div className="max-w-4xl mx-auto glass-panel rounded-xl p-2 relative shadow-xl ring-1 ring-white/5 transition-all focus-within:ring-blue-500/50 bg-gradient-to-b from-[var(--bg-sec)]/0 to-[var(--bg-sec)]/30">
 
-                                <form onSubmit={handleSend} className="flex items-end gap-2">
-                                    <button type="button" onClick={() => setMenuOpen(!menuOpen)} className="p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"><i className={`fa-solid fa-plus text-lg transition-transform ${menuOpen ? 'rotate-45' : ''}`}></i></button>
-                                    <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e); }}} placeholder="Apa yang ingin kamu ketahui tentang Direktorat Metrologi?" className="w-full bg-transparent border-none text-gray-200 placeholder-gray-500 focus:ring-0 resize-none max-h-32 min-h-[44px] py-3 pl-4 text-sm leading-relaxed" rows="1" style={{height:'auto'}}></textarea>
-                                    <button type="submit" disabled={!input.trim() && attachments.length === 0 || isLoading || !user} className="p-3 bg-blue-600 hover:bg-blue-500 disabled:bg-white/5 disabled:text-gray-600 text-white rounded-lg transition-all"><i className="fa-solid fa-paper-plane"></i></button>
+                                {showAttachMenu && (
+                                    <div className="absolute bottom-full left-0 mb-2 bg-[var(--bg-sec)] border border-[var(--border)] rounded-xl shadow-2xl p-1.5 z-50 animate-[fadeIn_0.1s] flex flex-col gap-1 min-w-[180px]">
+                                        <button onClick={() => { fileRef.current.accept=".jpg,.jpeg,.png,.webp"; fileRef.current.click(); }} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg text-xs transition-colors text-left font-medium"><i className="fa-solid fa-image text-blue-400 w-4"></i> Gambar</button>
+                                        <button onClick={() => { fileRef.current.accept=".xlsx,.xls,.csv"; fileRef.current.click(); }} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg text-xs transition-colors text-left font-medium"><i className="fa-solid fa-file-excel text-green-400 w-4"></i> Excel Data</button>
+                                        <button onClick={() => { fileRef.current.accept=".pdf"; fileRef.current.click(); }} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg text-xs transition-colors text-left font-medium"><i className="fa-solid fa-file-pdf text-red-400 w-4"></i> PDF Dokumen</button>
+                                    </div>
+                                )}
+                                <input type="file" ref={fileRef} onChange={handleFile} className="hidden" multiple />
+
+                                {attachments.length > 0 && (
+                                    <div className="flex gap-2 p-2 border-b border-[var(--border)] overflow-x-auto mb-1 scroller">
+                                        {attachments.map((a, i) => (
+                                            <div key={i} className="bg-white/5 border border-[var(--border)] rounded pl-2 pr-7 py-1 text-[10px] flex items-center gap-2 relative group flex-shrink-0">
+                                                {a.type === 'image' && a.preview ? <img src={a.preview} className="w-4 h-4 rounded object-cover cursor-pointer" onClick={()=>setPreviewImg(a.preview)} /> : <i className="fa-solid fa-paperclip"></i>}
+                                                <span className="truncate max-w-[100px]">{a.name}</span>
+                                                <button onClick={() => setAttachments(attachments.filter((_, idx) => idx!==i))} className="absolute right-1 hover:text-red-400"><i className="fa-solid fa-xmark"></i></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleSend} className="flex items-end gap-2 p-1.5">
+                                    <button type="button" onClick={() => setShowAttachMenu(!showAttachMenu)} className={`p-2.5 flex-shrink-0 text-[var(--text-sec)] hover:text-[var(--text-main)] hover:bg-white/5 rounded-lg transition-colors ${showAttachMenu?'text-blue-400':''}`}>
+                                        <i className="fa-solid fa-paperclip text-lg"></i>
+                                    </button>
+
+                                    <textarea 
+                                        value={input} 
+                                        onChange={(e) => setInput(e.target.value)} 
+                                        onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(e); }}}
+                                        placeholder="Ketik pertanyaan atau upload data..." 
+                                        className="w-full bg-transparent text-[var(--text-main)] placeholder-gray-500 focus:ring-0 resize-none max-h-32 min-h-[40px] py-3 px-2 text-sm leading-relaxed outline-none" 
+                                        rows="1" 
+                                        style={{height: 'auto'}}
+                                    ></textarea>
+
+                                    {isLoading ? (
+                                        <button type="button" onClick={cancelGen} className="flex-shrink-0 px-4 py-2.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white rounded-lg transition-all border border-red-700 shadow-lg shadow-red-600/40 flex items-center gap-2 font-semibold text-xs" title="Hentikan proses">
+                                            <i className="fa-solid fa-stop"></i>
+                                            <span>Batalkan</span>
+                                        </button>
+                                    ) : !input.trim() && !attachments.length ? (
+                                        <button type="button" onClick={toggleMic} className="flex-shrink-0 p-2.5 text-[var(--text-sec)] hover:text-white rounded-lg transition-all relative">
+                                            <i className={`fa-solid fa-microphone text-lg ${isListening ? 'text-red-500 mic-active' : ''}`}></i>
+                                        </button>
+                                    ) : (
+                                        <button type="submit" className="flex-shrink-0 p-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-lg shadow-lg transition-all">
+                                            <i className="fa-solid fa-paper-plane"></i>
+                                        </button>
+                                    )}
                                 </form>
                             </div>
                         </div>
@@ -526,8 +1478,9 @@
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
+        console.log("Rendering app...");
         root.render(<App />);
+        console.log("App rendered!");
     </script>
 </body>
 </html>
-
